@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>تسجيل الدخول — SOA Group</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/base.css" />
+    <link rel="stylesheet" href="assets/css/layout.css" />
+    <link rel="stylesheet" href="assets/css/components.css" />
+    <link rel="stylesheet" href="assets/css/utilities.css" />
+    <style>
+      body,
+      html {
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-wrap">
+      <article class="card login-card">
+        <div
+          class="full-brand"
+          style="
+            text-align: center;
+            margin: 12px auto;
+            height: auto;
+            width: 80%;
+          "
+        >
+          <img src="./imgs/logo-3.png" alt="SOA Group" />
+        </div>
+        <h1 class="card-title">تسجيل الدخول</h1>
+        <p class="muted">
+          قم بتسجيل الدخول للوصول إلى لوحة التحكم الخاصة بموقع مجموعة سوا.
+        </p>
+        <form id="loginForm" class="stack">
+          <label
+            >اسم المستخدم<input
+              id="username"
+              required
+              placeholder="اسم المستخدم" /></label
+          ><label
+            >كلمة السر<input
+              id="password"
+              required
+              type="password"
+              placeholder="********" /></label
+          ><button class="btn" type="submit">دخول</button>
+        </form>
+        <p class="muted">
+          إذا واجهت أي مشكلة في تسجيل الدخول، يرجى التواصل مع مسؤول النظام.
+        </p>
+      </article>
+    </div>
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script>
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const u = document.getElementById("username").value;
+          const p = document.getElementById("password").value;
+          const r = window.SOA_AUTH.login(u, p);
+          if (!r.ok) {
+            alert(r.error || "فشل تسجيل الدخول");
+            return;
+          }
+          location.href = "index.html";
+        });
+    </script>
+  </body>
+</html>

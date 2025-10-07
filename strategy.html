@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>الاستراتيجية — SOA Group</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/base.css" />
+    <link rel="stylesheet" href="assets/css/layout.css" />
+    <link rel="stylesheet" href="assets/css/components.css" />
+    <link rel="stylesheet" href="assets/css/admin.css" />
+    <link rel="stylesheet" href="assets/css/utilities.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav">
+        <ul class="nav-links">
+          <li>
+            <button id="logoutBtn" class="btn btn-ghost">تسجيل الخروج</button>
+          </li>
+          <li class="sep"></li>
+          <li><a href="index.html">الرئيسية</a></li>
+          <li><a href="goals.html">المهمات</a></li>
+          <li><a class="active" href="strategy.html">الاستراتيجية</a></li>
+          <li><a href="constitution.html">الدستور</a></li>
+        </ul>
+        <div class="full-brand">
+          <img src="./imgs/logo-2.png" alt="SOA Group" />
+        </div>
+      </nav>
+    </header>
+    <main class="container">
+      <div id="app" class="app"></div>
+    </main>
+    <footer class="site-footer">
+      <div class="full-brand">
+        <img src="./imgs/logo-3.png" alt="SOA Group" />
+      </div>
+      <p>© 2025 SOA Group — مجموعة سوا</p>
+    </footer>
+
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/guard.js"></script>
+    <script src="assets/js/renderer.js"></script>
+    <script>
+      (function () {
+        const cfg = window.SOA_CONFIG;
+        document.getElementById("logoutBtn").onclick = () =>
+          window.SOA_AUTH.logout();
+        const url = cfg.PAGES["strategy"];
+        window.currentDataUrl = url;
+        window.SOA_RENDER.renderPage(url);
+      })();
+    </script>
+    <script src="assets/js/admin.js"></script>
+  </body>
+</html>

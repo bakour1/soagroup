@@ -1,0 +1,11 @@
+.hidden {
+  display: none !important;
+}
+[dir="rtl"] .sub-title,
+[dir="rtl"] .card-title {
+  text-align: right;
+}
+.wrap {
+  white-space: pre-wrap;
+  word-break: break-word;
+}

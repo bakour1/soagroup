@@ -1,0 +1,187 @@
+/* assets\css\components.css */
+/* Progress على لايت */
+.progress {
+  height: 10px;
+  background: #f1f5f9; /* فاتح واضح */
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.progress .progress-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--ok), var(--brand));
+  transition: width 0.3s ease;
+}
+
+/* عناصر المهمات */
+.goal {
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  border: 1px dashed color-mix(in oklab, var(--border) 85%, transparent);
+  margin: 0.25rem 0;
+}
+.goal.done {
+  border-style: solid;
+  background: rgba(120, 207, 158, 0.37);
+}
+
+.goal:not(.done) {
+  background-color: rgba(212, 119, 119, 0.267);
+}
+
+.goals-card .goals-list {
+  margin: 0.6rem 0 0;
+  padding-inline-start: 1rem;
+}
+
+/* زر التحرير العائم */
+.admin-fab {
+  font-size: 18px;
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 60;
+  border-radius: 999px;
+  padding: 0.5rem 1.4rem;
+  font-weight: 800;
+  background: var(--brand);
+  color: #fff;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  cursor: pointer;
+}
+
+/* لوحة الإدارة لايت */
+.admin-panel {
+  position: fixed;
+  inset: 84px 0 0 auto;
+  right: 0;
+  width: min(560px, 100%);
+  max-height: 88vh;
+  overflow: auto;
+  background: #fff;
+  border-left: 1px solid var(--border);
+  padding: 14px;
+  z-index: 70;
+  box-shadow: -12px 0 32px rgba(2, 12, 27, 0.08);
+}
+/* hide scroll bar for admin panel */
+.admin-panel::-webkit-scrollbar {
+  display: none;
+}
+.admin-header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+.admin-body details {
+  margin: 12px 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(14, 138, 160, 0.12);
+
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+    outline: none;
+    padding: 10px;
+    background-color: var(--brand);
+    color: var(--accent);
+    border-radius: 10px;
+  }
+}
+.admin-body {
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-weight: 600;
+
+    &:not(:first-child) {
+      margin: 20px 0;
+    }
+  }
+  input,
+  textarea,
+  select {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    background: var(--border);
+    color: var(--text);
+    max-width: 100%;
+  }
+  .sub-editor:not(:first-child) {
+    padding-bottom: 20px;
+    margin-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .action-editor {
+    display: flex;
+    gap: 8px;
+    margin-block: 12px;
+  }
+  #addSection {
+    margin-block: 10px;
+  }
+  .item-editor {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .goal-done {
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--border);
+  }
+  #addGoalGroup {
+    margin-top: 10px;
+  }
+}
+.editor-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  margin: 8px 0;
+  background: #fff;
+}
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.login-wrap {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+}
+.login-wrap input {
+  display: block;
+  margin-top: 10px;
+}
+.login-card {
+  width: min(520px, 92vw);
+}
+@media (max-width: 560px) {
+  .login-wrap {
+    background-color: #fff;
+  }
+  .login-card {
+    box-shadow: none;
+    border: none;
+  }
+  .login-wrap .card-title {
+    text-align: center !important;
+  }
+  .login-wrap .muted {
+    text-align: center !important;
+  }
+}

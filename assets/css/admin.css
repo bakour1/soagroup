@@ -1,0 +1,10 @@
+.site-header,
+.site-footer,
+.nav {
+  user-select: none;
+  pointer-events: auto;
+}
+html[data-role="member"] .admin-fab,
+html[data-role="member"] .admin-panel {
+  display: none !important;
+}
