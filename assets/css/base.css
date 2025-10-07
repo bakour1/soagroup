@@ -147,3 +147,6 @@ label {
   border-bottom: 3px solid var(--brand);
   padding-bottom: 8px;
 }
+.no-scroll {
+  overflow: hidden;
+}

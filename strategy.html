@@ -19,6 +19,16 @@
   <body>
     <header class="site-header">
       <nav class="nav">
+        <button
+          class="hamburger"
+          id="menuBtn"
+          aria-label="فتح القائمة"
+          aria-controls="mobileDrawer"
+          aria-expanded="false"
+        >
+          <!-- أيقونة بسيطة (3 خطوط) -->
+          <span></span><span></span><span></span>
+        </button>
         <ul class="nav-links">
           <li>
             <button id="logoutBtn" class="btn btn-ghost">تسجيل الخروج</button>
@@ -32,8 +42,41 @@
         <div class="full-brand">
           <img src="./imgs/logo-2.png" alt="SOA Group" />
         </div>
+
+        <!-- روابط الديسكتوب تبقى كما هي -->
       </nav>
+
+      <!-- السلايدبار للموبايل -->
+      <aside class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
+        <div class="drawer-header">
+          <div class="full-brand">
+            <img src="./imgs/logo-2.png" alt="SOA Group" />
+          </div>
+          <button
+            class="drawer-close"
+            id="closeDrawerBtn"
+            aria-label="إغلاق القائمة"
+          >
+            ×
+          </button>
+        </div>
+        <ul class="drawer-links">
+          <li><a href="index.html">الرئيسية</a></li>
+          <li><a href="goals.html">الأهداف</a></li>
+          <li><a class="active" href="strategy.html">الاستراتيجية</a></li>
+          <li><a href="constitution.html">الدستور</a></li>
+          <li>
+            <button id="logoutBtnMobile" class="btn btn-ghost">
+              تسجيل الخروج
+            </button>
+          </li>
+        </ul>
+      </aside>
+
+      <!-- خلفية للتعتيم -->
+      <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
     </header>
+
     <main class="container">
       <div id="app" class="app"></div>
     </main>
@@ -47,6 +90,7 @@
     <script src="assets/js/config.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/guard.js"></script>
+    <script src="assets/js/nav.js"></script>
     <script src="assets/js/renderer.js"></script>
     <script>
       (function () {

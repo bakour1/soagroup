@@ -185,3 +185,19 @@
     text-align: center !important;
   }
 }
+/* بطاقات الأهداف والقوائم على الموبايل */
+@media (max-width: 768px) {
+  .goals-card .goals-list li {
+    padding: 0.4rem 0.6rem;
+  }
+  .card-title {
+    font-size: 1.05rem;
+  }
+}
+
+/* تحسين تباعد العناوين الفرعية */
+@media (max-width: 768px) {
+  .sub-title {
+    margin-top: 0.6rem;
+  }
+}
