@@ -86,31 +86,58 @@
   function renderGoals(root, arr) {
     if (!Array.isArray(arr)) return;
     const wrap = el("section", "goals");
+
     arr.forEach((g) => {
       const card = el("article", "card goals-card");
+
+      // العنوان
       const h = el("h3", "card-title");
       h.textContent = g.subtitle || "";
+      card.appendChild(h);
 
+      // احسب التقدم + العدّاد
+      const items = g.items || [];
+      const total = items.length || 0;
+      const done = items.filter((x) => x && x.done).length;
+      const p = total ? Math.round((done / total) * 100) : 0;
+
+      // صف يعرض الشريط + الميتا بجانبه
+      const row = el("div", "progress-row");
+
+      // الشريط
       const bar = el("div", "progress");
       const fill = el("div", "progress-fill");
-      const p = progress(g.items || []);
       fill.style.width = p + "%";
       fill.setAttribute("aria-valuenow", String(p));
       bar.appendChild(fill);
 
-      wrap.appendChild(h);
-      card.appendChild(bar);
+      // الميتا: (مكتمل/إجمالي) + (النسبة%)
+      const meta = el("div", "progress-meta");
+      const badge = el("span", "progress-badge wrap");
+      badge.textContent = `${done}/${total}`;
+      const percent = el("span", "progress-percent");
+      percent.textContent = `${p}%`;
 
+      meta.appendChild(percent);
+      meta.appendChild(badge);
+
+      // دمجهم في صف واحد
+      row.appendChild(bar);
+      row.appendChild(meta);
+      card.appendChild(row);
+
+      // قائمة الأهداف
       const ul = el("ul", "goals-list");
-      (g.items || []).forEach((it) => {
-        const li = el("li", (it.done ? "goal done " : "goal ") + "wrap"); // مع لفّ الأسطر
-        li.textContent = it.title || "";
+      items.forEach((it) => {
+        const li = el("li", (it && it.done ? "goal done " : "goal ") + "wrap");
+        li.textContent = (it && it.title) || "";
         ul.appendChild(li);
       });
       card.appendChild(ul);
 
       wrap.appendChild(card);
     });
+
     root.appendChild(wrap);
   }
 

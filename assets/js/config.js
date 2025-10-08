@@ -1,5 +1,5 @@
 window.SOA_CONFIG = {
-  SHARED_PASSWORD: "SOA@2025",
+  SHARED_PASSWORD: "soaaa2025",
   MEMBER_USERNAME: "soagroup",
   ADMIN_USERNAME: "bakour512",
   BRAND_AR: "مجموعة سوا — SOA Group",

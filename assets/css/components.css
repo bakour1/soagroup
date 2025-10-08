@@ -35,6 +35,44 @@
   padding-inline-start: 1rem;
 }
 
+/* صف الشريط + العدّاد */
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 0.25rem;
+}
+
+/* صندوق المعلومات بجانب الشريط */
+.progress-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* شارة (مكتمل/إجمالي) */
+.progress-badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-variant-numeric: tabular-nums;
+}
+
+/* النسبة % */
+.progress-percent {
+  opacity: 0.95;
+  font-variant-numeric: tabular-nums;
+}
+
+/* تأكد من أن الشريط يأخذ بقية المساحة */
+.progress-row .progress {
+  flex: 1 1 auto;
+  min-width: 140px;
+}
+
 /* زر التحرير العائم */
 .admin-fab {
   font-size: 18px;
