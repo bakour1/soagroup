@@ -91,24 +91,21 @@
     saveSession(session);
     return { ok: true, session };
   }
+  // assets/js/auth.js (داخل IIFE نفسه)
   function logout() {
     clearSession();
-
-    const { protocol, hostname, pathname } = window.location;
-    let base = "/";
-
-    // محليًا: لا تستخدم مسار مطلق
-    if (protocol === "file:") {
-      base = "";
-    }
-    // GitHub Pages (الموقع داخل مسار فرعي مثل /repo-name/)
-    else if (/\.github\.io$/.test(hostname)) {
-      const seg = pathname.split("/").filter(Boolean)[0]; // أول مجلد
-      base = seg ? `/${seg}/` : "/";
-    }
-
-    // استخدام replace لتجنّب الرجوع للصفحة السابقة بعد تسجيل الخروج
-    window.location.replace(base + "login.html");
+    const base =
+      (window.SOA_CONFIG && window.SOA_CONFIG.BASE_PATH) ||
+      (function () {
+        const { protocol, hostname, pathname } = window.location;
+        if (protocol === "file:") return "";
+        if (/\.github\.io$/.test(hostname)) {
+          const seg = pathname.split("/").filter(Boolean)[0];
+          return seg ? `/${seg}/` : "/";
+        }
+        return "/";
+      })();
+    window.location.href = base + "login.html";
   }
 
   window.SOA_AUTH = { login, logout, readSession, clearSession };

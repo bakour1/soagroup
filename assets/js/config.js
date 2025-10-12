@@ -1,4 +1,4 @@
-// assets\js\config.js
+// assets/js/config.js
 window.SOA_CONFIG = {
   SHARED_PASSWORD: "soaaa2025",
   MEMBER_USERNAME: "soagroup",
@@ -6,6 +6,7 @@ window.SOA_CONFIG = {
   BRAND_AR: "مجموعة سوا — SOA Group",
   BRAND_EN: "SOA Group",
   LOGO_URL: "imgs/logo-4.png",
+  BASE_PATH: "/soagroup/", // 👈 مهم جداً على GitHub Pages
   PAGES: {
     home: "data/home.json",
     goals: "data/goals.json",

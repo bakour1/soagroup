@@ -69,3 +69,11 @@
     logoutMobile.onclick = () =>
       window.SOA_AUTH.logout && window.SOA_AUTH.logout();
 })();
+// Prefx anchors that start with "/" using BASE_PATH
+(function prefixAnchorsToBase() {
+  const base = (window.SOA_CONFIG && window.SOA_CONFIG.BASE_PATH) || "/";
+  document.querySelectorAll('a[href^="/"]').forEach((a) => {
+    const rel = a.getAttribute("href").slice(1); // remove leading "/"
+    a.setAttribute("href", base + rel);
+  });
+})();
