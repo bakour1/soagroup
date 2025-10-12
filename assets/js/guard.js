@@ -1,23 +1,38 @@
-// assets\js\guard.js
+// assets/js/guard.js
 (function () {
-  const s = window.SOA_AUTH.readSession && window.SOA_AUTH.readSession();
-  if (!s) {
+  // احسب الـ base بشكل آمن لكل البيئات
+  function getBase() {
+    const cfgBase = (window.SOA_CONFIG && window.SOA_CONFIG.BASE_PATH) || null;
+    if (cfgBase) return cfgBase.endsWith("/") ? cfgBase : cfgBase + "/";
+
     const { protocol, hostname, pathname } = window.location;
-    let base = "/";
-
-    // محليًا: لا تستخدم مسار مطلق
-    if (protocol === "file:") {
-      base = "";
+    if (protocol === "file:") return ""; // تشغيل محلي: مسارات نسبية
+    if (/\.github\.io$/.test(hostname)) {
+      // أول مجلد هو اسم الريبو على GH Pages
+      const seg = pathname.split("/").filter(Boolean)[0];
+      return seg ? `/${seg}/` : "/";
     }
-    // GitHub Pages (الموقع داخل مسار فرعي مثل /repo-name/)
-    else if (/\.github\.io$/.test(hostname)) {
-      const seg = pathname.split("/").filter(Boolean)[0]; // أول مجلد
-      base = seg ? `/${seg}/` : "/";
-    }
+    return "/"; // استضافة عادية
+  }
 
-    // استخدام replace لتجنّب الرجوع للصفحة السابقة بعد تسجيل الخروج
+  const base = getBase();
+  const path = window.location.pathname || "";
+  const isLoginPage = /(^|\/)login\.html?$/.test(path);
+
+  const read = window.SOA_AUTH && window.SOA_AUTH.readSession;
+  const session = read ? read() : null;
+
+  // إن لم تكن مسجلاً و لست على صفحة الدخول -> أعد التوجيه
+  if (!session && !isLoginPage) {
     window.location.replace(base + "login.html");
     return;
   }
-  document.documentElement.setAttribute("data-role", s.role || "member");
+
+  // لو عندك جلسة، عرّف الدور على <html>
+  if (session) {
+    document.documentElement.setAttribute(
+      "data-role",
+      session.role || "member"
+    );
+  }
 })();
