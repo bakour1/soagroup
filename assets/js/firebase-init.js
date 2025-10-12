@@ -1,6 +1,4 @@
-{
-  /* <script type="module"> */
-}
+// assets/js/firebase-init.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import {
   getFirestore,
@@ -10,7 +8,6 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-// ⚠️ صحّح storageBucket إلى appspot.com (الأصح لفاييربيز)
 const firebaseConfig = {
   apiKey: "AIzaSyBM3gTilif9M4CYPQJ_l9qusvweT2uWKsE",
   authDomain: "soa-group-df829.firebaseapp.com",
@@ -24,7 +21,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// API بسيطة نستخدمها من admin.js و renderer.js
 window.FB = {
   async saveDoc(path, data) {
     const ref = doc(db, ...path.split("/"));
@@ -43,9 +39,5 @@ window.FB = {
   },
 };
 
-// أعلم الصفحات إن التهيئة تمت
 window.FB_READY = true;
 window.dispatchEvent(new Event("fb-ready"));
-{
-  /* </script> */
-}

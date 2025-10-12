@@ -96,11 +96,20 @@
     <script>
       (function () {
         const cfg = window.SOA_CONFIG;
-        document.getElementById("logoutBtn").onclick = () =>
-          window.SOA_AUTH.logout();
         const url = cfg.PAGES["model"];
         window.currentDataUrl = url;
-        window.SOA_RENDER.renderPage(url);
+
+        // 👈 مهم: مسار الوثيقة الخاصة بصفحة model
+        window.FB_DOC_PATH = "soa/model";
+
+        function boot() {
+          window.SOA_RENDER.renderPage(url);
+        }
+        if (window.FB && window.FB.loadDoc) boot();
+        else window.addEventListener("fb-ready", boot, { once: true });
+
+        const btn = document.getElementById("logoutBtn");
+        if (btn) btn.onclick = () => window.SOA_AUTH.logout();
       })();
     </script>
     <script src="../../assets/js/admin.js"></script>

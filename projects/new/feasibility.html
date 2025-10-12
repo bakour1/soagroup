@@ -96,27 +96,21 @@
 
     <!-- Firebase init (يجب أن يسبق سكربت التشغيل) -->
     <script type="module" src="../../assets/js/firebase-init.js"></script>
-
-    <!-- تشغيل الصفحة: بعد تهيئة Firebase -->
     <script>
       (function () {
         const cfg = window.SOA_CONFIG;
         const url = cfg.PAGES["feasibility"];
         window.currentDataUrl = url;
 
+        // 👈 مهم: مسار وثيقة Firestore لهذه الصفحة
+        window.FB_DOC_PATH = "soa/feasibility";
+
         function boot() {
-          // الآن Firebase جاهز، والـ renderer سيحاول الجلب من Firestore أولاً
           window.SOA_RENDER.renderPage(url);
         }
+        if (window.FB && window.FB.loadDoc) boot();
+        else window.addEventListener("fb-ready", boot, { once: true });
 
-        // إن كان FB جاهزاً بالفعل شغّل فوراً، وإلا انتظر حدث fb-ready مرّة واحدة
-        if (window.FB && window.FB.loadDoc && window.FB.saveDoc) {
-          boot();
-        } else {
-          window.addEventListener("fb-ready", boot, { once: true });
-        }
-
-        // زر الخروج (كما هو)
         const logoutBtn = document.getElementById("logoutBtn");
         if (logoutBtn) logoutBtn.onclick = () => window.SOA_AUTH.logout();
       })();
