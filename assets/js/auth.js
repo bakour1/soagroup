@@ -93,7 +93,7 @@
   }
   function logout() {
     clearSession();
-    location.href = "login.html";
+    location.href = "/login.html";
   }
   window.SOA_AUTH = { login, logout, readSession, clearSession };
 })();

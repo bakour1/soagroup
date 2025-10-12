@@ -27,9 +27,9 @@
           aria-controls="mobileDrawer"
           aria-expanded="false"
         >
-          <!-- أيقونة بسيطة (3 خطوط) -->
           <span></span><span></span><span></span>
         </button>
+
         <ul class="nav-links">
           <li>
             <button id="logoutBtn" class="btn btn-ghost">تسجيل الخروج</button>
@@ -40,11 +40,10 @@
           <li><a href="/strategy.html">الاستراتيجية</a></li>
           <li><a href="/constitution.html">الدستور</a></li>
         </ul>
+
         <div class="full-brand">
           <img src="/imgs/logo-2.png" alt="SOA Group" />
         </div>
-
-        <!-- روابط الديسكتوب تبقى كما هي -->
       </nav>
 
       <!-- السلايدبار للموبايل -->
@@ -74,12 +73,13 @@
         </ul>
       </aside>
 
-      <!-- خلفية للتعتيم -->
       <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
     </header>
+
     <main class="container">
       <div id="app" class="app"></div>
     </main>
+
     <footer class="site-footer">
       <div class="full-brand">
         <img src="/imgs/logo-3.png" alt="SOA Group" />
@@ -87,21 +87,90 @@
       <p>© 2025 SOA Group — مجموعة سوا</p>
     </footer>
 
+    <!-- سكربتات النظام -->
     <script src="../../assets/js/config.js"></script>
     <script src="../../assets/js/auth.js"></script>
     <script src="../../assets/js/guard.js"></script>
     <script src="../../assets/js/nav.js"></script>
     <script src="../../assets/js/renderer.js"></script>
+
+    <!-- Firebase init (يجب أن يسبق سكربت التشغيل) -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+      import {
+        getFirestore,
+        doc,
+        getDoc,
+        setDoc,
+        serverTimestamp,
+      } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyBM3gTilif9M4CYPQJ_l9qusvweT2uWKsE",
+        authDomain: "soa-group-df829.firebaseapp.com",
+        projectId: "soa-group-df829",
+        storageBucket: "soa-group-df829.firebasestorage.app",
+        messagingSenderId: "843665578533",
+        appId: "1:843665578533:web:695f984e495fa6ce713dcc",
+        measurementId: "G-BGQQCZ2BET",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      // مسار الوثيقة
+      window.FB_DOC_PATH = "soa/feasibility";
+
+      // واجهة بسيطة
+      window.FB = {
+        async saveDoc(path, data) {
+          const ref = doc(db, ...path.split("/"));
+          await setDoc(
+            ref,
+            { ...data, _updatedAt: serverTimestamp() },
+            { merge: true }
+          );
+        },
+        async loadDoc(path) {
+          const ref = doc(db, ...path.split("/"));
+          const snap = await getDoc(ref);
+          if (!snap.exists()) throw new Error("Document not found");
+          const { _updatedAt, ...rest } = snap.data() || {};
+          return rest;
+        },
+      };
+
+      // 👈 إشعار الجاهزية
+      window.FB_READY = true;
+      window.dispatchEvent(new Event("fb-ready"));
+    </script>
+
+    <!-- تشغيل الصفحة: بعد تهيئة Firebase -->
     <script>
       (function () {
         const cfg = window.SOA_CONFIG;
-        document.getElementById("logoutBtn").onclick = () =>
-          window.SOA_AUTH.logout();
         const url = cfg.PAGES["feasibility"];
         window.currentDataUrl = url;
-        window.SOA_RENDER.renderPage(url);
+
+        function boot() {
+          // الآن Firebase جاهز، والـ renderer سيحاول الجلب من Firestore أولاً
+          window.SOA_RENDER.renderPage(url);
+        }
+
+        // إن كان FB جاهزاً بالفعل شغّل فوراً، وإلا انتظر حدث fb-ready مرّة واحدة
+        if (window.FB && window.FB.loadDoc && window.FB.saveDoc) {
+          boot();
+        } else {
+          window.addEventListener("fb-ready", boot, { once: true });
+        }
+
+        // زر الخروج (كما هو)
+        const logoutBtn = document.getElementById("logoutBtn");
+        if (logoutBtn) logoutBtn.onclick = () => window.SOA_AUTH.logout();
       })();
     </script>
+
+    <!-- لوحة الإدارة -->
     <script src="../../assets/js/admin.js"></script>
   </body>
 </html>

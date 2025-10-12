@@ -1,3 +1,4 @@
+<!-- login.html -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
@@ -58,20 +59,32 @@
         </p>
       </article>
     </div>
+    <!-- login.html (المقاطع المهمة فقط) -->
     <script src="assets/js/config.js"></script>
+    <script type="module" src="assets/js/firebase.js"></script>
     <script src="assets/js/auth.js"></script>
+
+    <form id="loginForm" class="stack">
+      <label
+        >اسم المستخدم
+        <input id="username" required placeholder="مثال: bakour512" />
+      </label>
+      <label
+        >كلمة السر
+        <input id="password" required type="password" placeholder="********" />
+      </label>
+      <button class="btn" type="submit">دخول</button>
+    </form>
+
     <script>
       document
         .getElementById("loginForm")
-        .addEventListener("submit", function (e) {
+        .addEventListener("submit", async (e) => {
           e.preventDefault();
-          const u = document.getElementById("username").value;
+          const u = document.getElementById("username").value.trim();
           const p = document.getElementById("password").value;
-          const r = window.SOA_AUTH.login(u, p);
-          if (!r.ok) {
-            alert(r.error || "فشل تسجيل الدخول");
-            return;
-          }
+          const r = await window.SOA_AUTH.login(u, p); // 👈 يوزرنيم أو إيميل
+          if (!r.ok) return alert(r.error || "فشل تسجيل الدخول");
           location.href = "index.html";
         });
     </script>

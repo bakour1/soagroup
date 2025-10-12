@@ -1,8 +1,7 @@
-// assets\js\admin.js
 (function () {
   const admin = document.documentElement.getAttribute("data-role") === "admin";
 
-  // تنزيل ملف
+  // تنزيل JSON محلي
   function dl(name, text) {
     const blob = new Blob([text], { type: "application/json;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -16,7 +15,7 @@
   // هيلبر للهروب داخل HTML
   function esc(s = "") {
     return String(s).replace(
-      /[&<>"']/g,
+      /[&<>\"']/g,
       (m) =>
         ({
           "&": "&amp;",
@@ -28,41 +27,150 @@
     );
   }
 
-  async function openEd() {
-    const url = window.currentDataUrl || "data.json";
+  // ====== محوّل ↔ Firestore ======
+  // يحوّل rows: Array<Array>  --> Array<Map> { c0:..., c1:... }
+  function rowsArrayToMaps(rowArr) {
+    if (!Array.isArray(rowArr)) return rowArr;
+    return rowArr.map((r) => {
+      if (!Array.isArray(r)) return r;
+      const o = {};
+      for (let i = 0; i < r.length; i++) o["c" + i] = r[i];
+      return o;
+    });
+  }
+  // عكس السابق: Array<Map> --> Array<Array> بالترتيب c0,c1,c2...
+  function rowsMapsToArray(rowMaps, colCount) {
+    if (!Array.isArray(rowMaps)) return rowMaps;
+    return rowMaps.map((r) => {
+      if (Array.isArray(r)) return r;
+      const keys = Object.keys(r || {}).sort(
+        (a, b) => Number(a.slice(1)) - Number(b.slice(1))
+      );
+      const out = [];
+      const len = Number.isFinite(colCount) ? colCount : keys.length;
+      for (let i = 0; i < len; i++) out.push(r["c" + i] ?? "");
+      return out;
+    });
+  }
+  // يمشي على الشجرة ويحوّل كل الجداول
+  function normalizeFromCloud(data) {
+    const clone = JSON.parse(JSON.stringify(data || {}));
+    (clone.sections || []).forEach((sec) => {
+      (sec.subsections || []).forEach((sub) => {
+        if (sub && sub.table && Array.isArray(sub.table.headers)) {
+          const cols = sub.table.headers.length;
+          if (
+            Array.isArray(sub.table.rows) &&
+            sub.table.rows.length &&
+            !Array.isArray(sub.table.rows[0])
+          ) {
+            // rows محفوظة كـ Maps -> رجّعها Arrays للواجهة
+            sub.table.rows = rowsMapsToArray(sub.table.rows, cols);
+          }
+        }
+      });
+    });
+    return clone;
+  }
+  function makeFirestoreSafe(data) {
+    const clone = JSON.parse(JSON.stringify(data || {}));
+    (clone.sections || []).forEach((sec) => {
+      (sec.subsections || []).forEach((sub) => {
+        if (sub && sub.table && Array.isArray(sub.table.headers)) {
+          if (Array.isArray(sub.table.rows)) {
+            // حوّل المصفوفات المتداخلة لمابات لتجنّب nested arrays
+            sub.table.rows = rowsArrayToMaps(sub.table.rows);
+          }
+          // headers و footer تبقى Arrays (لا مشكلة)
+        }
+      });
+    });
+    return clone;
+  }
+
+  // حالة الحفظ
+  let data = null;
+  // let autosaveTimer = null;
+  const AUTOSAVE_MS = 1200;
+  let dirty = false;
+
+  function setStatus(txt) {
+    const s = document.getElementById("saveStatus");
+    if (s) s.textContent = txt || "";
+  }
+
+  // تحميل مبدئي: جرّب Firestore ثم FALLBACK إلى JSON
+  async function loadInitial(url) {
+    // قراءة من Firestore
+    if (
+      window.FB &&
+      typeof window.FB.loadDoc === "function" &&
+      window.FB_DOC_PATH
+    ) {
+      try {
+        const cloud = await window.FB.loadDoc(window.FB_DOC_PATH);
+        if (cloud && Object.keys(cloud).length) {
+          return normalizeFromCloud(cloud);
+        }
+      } catch (e) {
+        console.warn("Firestore load failed, fallback to JSON:", e);
+      }
+    }
+    // JSON محلي
     const res = await fetch(url + "?v=" + Date.now());
-    if (!res.ok) {
-      alert("تعذّر تحميل البيانات: " + url);
+    if (!res.ok) throw new Error("تعذّر تحميل البيانات: " + url);
+    const j = await res.json();
+    return normalizeFromCloud(j);
+  }
+
+  // حفظ فوري إلى السحابة
+  async function saveCloudNow() {
+    if (
+      !(
+        window.FB &&
+        typeof window.FB.saveDoc === "function" &&
+        window.FB_DOC_PATH
+      )
+    ) {
+      setStatus('❗ لم يتم إعداد Firebase — استخدم "تصدير JSON" مؤقتًا');
       return;
     }
-    const data = await res.json();
+    try {
+      setStatus("جارٍ الحفظ…");
+      const payload = makeFirestoreSafe(data);
+      await window.FB.saveDoc(window.FB_DOC_PATH, payload);
+      dirty = false;
+      setStatus("✓ تم الحفظ " + new Date().toLocaleTimeString());
+    } catch (e) {
+      console.error(e);
+      setStatus("✗ فشل الحفظ: " + (e?.message || e));
+    }
+  }
 
-    // اللوحة
+  async function openEd() {
+    const url = window.currentDataUrl || "data.json";
+    data = await loadInitial(url);
+
     const p = document.createElement("div");
     p.className = "admin-panel";
     p.innerHTML = `
       <div class="admin-header">
         <strong>وضع الإدارة</strong>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <span id="saveStatus" class="muted" style="min-width:160px"></span>
+          <button id="saveCloudBtn" class="btn">حفظ للسحابة</button>
           <button id="saveJsonBtn" class="btn">تصدير JSON</button>
           <button id="closeAdminBtn" class="btn btn-ghost">إغلاق</button>
         </div>
       </div>
+
       <div class="admin-body">
         <details open>
           <summary>الـ Landing</summary>
-          <label>رابط الشعار (logo)
-            <input id="landLogo" placeholder="/imgs/logo-4.png" />
-          </label>
-          <label>العنوان
-            <input id="landTitle"/>
-          </label>
-          <label>العنوان الثاني
-            <input id="landSubtitle"/>
-          </label>
-          <label>النص والشرح
-            <textarea id="landBody" rows="4"></textarea>
-          </label>
+          <label>رابط الشعار (logo)<input id="landLogo" placeholder="/imgs/logo-4.png" /></label>
+          <label>العنوان<input id="landTitle"/></label>
+          <label>العنوان الثاني<input id="landSubtitle"/></label>
+          <label>النص والشرح<textarea id="landBody" rows="4"></textarea></label>
         </details>
 
         <details open>
@@ -80,14 +188,14 @@
     `;
     document.body.appendChild(p);
 
-    // قيم الـLanding
+    // قيَم الهبوط
     document.getElementById("landLogo").value = data.landing?.logo || "";
     document.getElementById("landTitle").value = data.landing?.title || "";
     document.getElementById("landSubtitle").value =
       data.landing?.subtitle || "";
     document.getElementById("landBody").value = data.landing?.body || "";
 
-    // ========== الأقسام ==========
+    // ===== الأقسام =====
     function rSec() {
       const host = document.getElementById("sectionsEditor");
       host.innerHTML = "";
@@ -112,7 +220,6 @@
         subs.forEach((sub, sj) => {
           const hasTable = sub.table && Array.isArray(sub.table.headers);
           const textsStr = (sub.texts || []).join("\n");
-          const rowsCount = hasTable ? (sub.table.rows || []).length : 0;
           const colsCount = hasTable ? (sub.table.headers || []).length : 0;
 
           const subDiv = document.createElement("div");
@@ -160,18 +267,18 @@
                       ${(sub.table.rows || [])
                         .map(
                           (row, ri) => `
-                        <div class="tbl-grid">
-                          ${Array.from({ length: colsCount })
-                            .map(
-                              (_, ci) =>
-                                `<input class="tbl-cell" data-si="${si}" data-sj="${sj}" data-ri="${ri}" data-ci="${ci}" value="${esc(
-                                  row?.[ci] ?? ""
-                                )}" />`
-                            )
-                            .join("")}
-                          <button class="btn danger" data-act="del-row" data-si="${si}" data-sj="${sj}" data-ri="${ri}">حذف الصف</button>
-                        </div>
-                      `
+                          <div class="tbl-grid">
+                            ${Array.from({ length: colsCount })
+                              .map(
+                                (_, ci) =>
+                                  `<input class="tbl-cell" data-si="${si}" data-sj="${sj}" data-ri="${ri}" data-ci="${ci}" value="${esc(
+                                    row?.[ci] ?? ""
+                                  )}" />`
+                              )
+                              .join("")}
+                            <button class="btn danger" data-act="del-row" data-si="${si}" data-sj="${sj}" data-ri="${ri}">حذف الصف</button>
+                          </div>
+                        `
                         )
                         .join("")}
                     </div>
@@ -226,7 +333,7 @@
       });
     }
 
-    // ========== المهمّات ==========
+    // ===== المهمات =====
     function rGoals() {
       const host = document.getElementById("goalsEditor");
       host.innerHTML = "";
@@ -240,7 +347,6 @@
           g.subtitle || ""
         )}</textarea>
           </label>
-
           <div class="items">
             ${items
               .map(
@@ -261,7 +367,6 @@
               )
               .join("")}
           </div>
-
           <div class="action-editor">
             <button class="btn" data-act="add-item" data-gi="${gi}">+ إضافة هدف</button>
             <button class="btn danger" data-act="del-group" data-gi="${gi}">حذف فقرة المهمات</button>
@@ -275,7 +380,7 @@
     rSec();
     rGoals();
 
-    // ====== تفاعلات الإدخال ======
+    // ===== Inputs → تحديث الداتا + حفظ تلقائي =====
     p.addEventListener("input", (e) => {
       const t = e.target;
 
@@ -308,7 +413,7 @@
           .filter(Boolean);
       }
 
-      // Table headers
+      // Table headers / cells / footer
       if (t.classList.contains("tbl-h")) {
         const si = +t.dataset.si,
           sj = +t.dataset.sj,
@@ -316,7 +421,6 @@
         const sub = data.sections[si].subsections[sj];
         sub.table.headers[ci] = t.value;
       }
-      // Table cell
       if (t.classList.contains("tbl-cell")) {
         const si = +t.dataset.si,
           sj = +t.dataset.sj,
@@ -325,7 +429,6 @@
         const sub = data.sections[si].subsections[sj];
         sub.table.rows[ri][ci] = t.value;
       }
-      // Table footer cells
       if (t.classList.contains("tbl-f")) {
         const si = +t.dataset.si,
           sj = +t.dataset.sj,
@@ -349,14 +452,15 @@
           ii = +t.dataset.ii;
         data.goals[gi].items[ii].done = t.checked;
       }
+
+      // scheduleAutosave();
     });
 
-    // ====== أزرار الأوامر ======
+    // ===== الأزرار =====
     p.addEventListener("click", (e) => {
       const a = e.target.dataset.act;
       if (!a) return;
 
-      // Subsections
       if (a === "add-sub") {
         const si = +e.target.dataset.si;
         data.sections[si].subsections = data.sections[si].subsections || [];
@@ -365,20 +469,22 @@
           texts: ["فقرة نص"],
         });
         rSec();
+        // scheduleAutosave();
       }
       if (a === "del-sec") {
         const si = +e.target.dataset.si;
         data.sections.splice(si, 1);
         rSec();
+        // scheduleAutosave();
       }
       if (a === "del-sub") {
         const si = +e.target.dataset.si,
           sj = +e.target.dataset.sj;
         data.sections[si].subsections.splice(sj, 1);
         rSec();
+        // scheduleAutosave();
       }
 
-      // Tables
       if (a === "add-table") {
         const si = +e.target.dataset.si,
           sj = +e.target.dataset.sj;
@@ -389,13 +495,14 @@
           footer: [],
         };
         rSec();
+        // scheduleAutosave();
       }
       if (a === "del-table") {
         const si = +e.target.dataset.si,
           sj = +e.target.dataset.sj;
-        const sub = data.sections[si].subsections[sj];
-        delete sub.table;
+        delete data.sections[si].subsections[sj].table;
         rSec();
+        // scheduleAutosave();
       }
       if (a === "add-col") {
         const si = +e.target.dataset.si,
@@ -405,15 +512,17 @@
         (sub.table.rows || []).forEach((r) => r.push(""));
         if (sub.table.footer) sub.table.footer.push("");
         rSec();
+        // scheduleAutosave();
       }
       if (a === "del-col") {
         const si = +e.target.dataset.si,
           sj = +e.target.dataset.sj;
         const sub = data.sections[si].subsections[sj];
-        if (sub.table.headers.length > 0) sub.table.headers.pop();
+        if (sub.table.headers.length) sub.table.headers.pop();
         (sub.table.rows || []).forEach((r) => r.pop());
         if (sub.table.footer && sub.table.footer.length) sub.table.footer.pop();
         rSec();
+        // scheduleAutosave();
       }
       if (a === "add-row") {
         const si = +e.target.dataset.si,
@@ -423,6 +532,7 @@
         sub.table.rows = sub.table.rows || [];
         sub.table.rows.push(Array.from({ length: cols }, () => ""));
         rSec();
+        // scheduleAutosave();
       }
       if (a === "del-row") {
         const si = +e.target.dataset.si,
@@ -431,29 +541,11 @@
         const sub = data.sections[si].subsections[sj];
         sub.table.rows.splice(ri, 1);
         rSec();
-      }
-
-      // Goals
-      if (a === "add-item") {
-        const gi = +e.target.dataset.gi;
-        data.goals[gi].items = data.goals[gi].items || [];
-        data.goals[gi].items.push({ title: "هدف جديد", done: false });
-        rGoals();
-      }
-      if (a === "del-item") {
-        const gi = +e.target.dataset.gi,
-          ii = +e.target.dataset.ii;
-        data.goals[gi].items.splice(ii, 1);
-        rGoals();
-      }
-      if (a === "del-group") {
-        const gi = +e.target.dataset.gi;
-        data.goals.splice(gi, 1);
-        rGoals();
+        // scheduleAutosave();
       }
     });
 
-    // تبديل الفوتر (تشغيل/تعطيل)
+    // تبديل الفوتر
     p.addEventListener("change", (e) => {
       if (e.target.classList.contains("tbl-has-footer")) {
         const si = +e.target.dataset.si,
@@ -466,6 +558,7 @@
           sub.table.footer = [];
         }
         rSec();
+        // scheduleAutosave();
       }
     });
 
@@ -474,17 +567,27 @@
       data.sections = data.sections || [];
       data.sections.push({ title: "قسم جديد", subsections: [] });
       rSec();
+      // scheduleAutosave();
     };
     p.querySelector("#addGoalGroup").onclick = () => {
       data.goals = data.goals || [];
       data.goals.push({ subtitle: "فقرة أهداف جديدة", items: [] });
       rGoals();
+      // scheduleAutosave();
     };
     p.querySelector("#saveJsonBtn").onclick = () => {
       const file = (window.currentDataUrl || "data.json").split("/").pop();
       dl(file, JSON.stringify(data, null, 2));
     };
+    p.querySelector("#saveCloudBtn").onclick = saveCloudNow;
     p.querySelector("#closeAdminBtn").onclick = () => p.remove();
+
+    window.addEventListener("beforeunload", (ev) => {
+      if (dirty) {
+        ev.preventDefault();
+        ev.returnValue = "";
+      }
+    });
   }
 
   function fab() {
