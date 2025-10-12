@@ -167,7 +167,7 @@
       <div class="admin-body">
         <details open>
           <summary>الـ Landing</summary>
-          <label>رابط الشعار (logo)<input id="landLogo" placeholder="/imgs/logo-4.png" /></label>
+          <label>رابط الشعار (logo)<input type="text" dir="ltr" id="landLogo" placeholder="/imgs/logo-4.png" /></label>
           <label>العنوان<input id="landTitle"/></label>
           <label>العنوان الثاني<input id="landSubtitle"/></label>
           <label>النص والشرح<textarea id="landBody" rows="4"></textarea></label>
