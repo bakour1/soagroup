@@ -1,3 +1,4 @@
+// assets\js\config.js
 window.SOA_CONFIG = {
   SHARED_PASSWORD: "soaaa2025",
   MEMBER_USERNAME: "soagroup",

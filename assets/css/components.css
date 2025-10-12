@@ -93,20 +93,19 @@
 /* لوحة الإدارة لايت */
 .admin-panel {
   position: fixed;
-  inset: 84px 0 0 auto;
   right: 0;
-  width: min(560px, 100%);
-  max-height: 88vh;
+  top: 0;
+  width: 100%;
+  height: 100vh;
   overflow: auto;
   background: #fff;
   border-left: 1px solid var(--border);
-  padding: 14px;
-  z-index: 70;
+  z-index: 1000;
   box-shadow: -12px 0 32px rgba(2, 12, 27, 0.08);
 }
 /* hide scroll bar for admin panel */
 .admin-panel::-webkit-scrollbar {
-  display: none;
+  /* display: none; */
 }
 .admin-header {
   display: flex;
@@ -115,6 +114,11 @@
   justify-content: space-between;
   border-bottom: 1px solid var(--border);
   padding-bottom: 12px;
+  position: sticky;
+  padding: 14px;
+  top: 0;
+  background: #fff;
+  z-index: 1000;
 }
 .admin-body details {
   margin: 12px 0;
@@ -184,6 +188,27 @@
     margin-top: 10px;
   }
 }
+.table-editor {
+  display: grid;
+  gap: 10px;
+}
+.table-editor .tbl-row {
+  display: grid;
+  gap: 8px;
+}
+.tbl-grid {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  margin-top: 10px;
+}
+.tbl-grid input {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  background: #fff;
+}
+
 .editor-card {
   border: 1px solid var(--border);
   border-radius: 12px;

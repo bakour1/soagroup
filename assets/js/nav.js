@@ -1,3 +1,4 @@
+// assets\js\nav.js
 (function () {
   function qs(id) {
     return document.getElementById(id);

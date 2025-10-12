@@ -1,3 +1,4 @@
+// assets\js\guard.js
 (function () {
   const s = window.SOA_AUTH.readSession && window.SOA_AUTH.readSession();
   if (!s) {

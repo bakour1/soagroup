@@ -166,6 +166,23 @@ th {
   background: #e9fbfd;
   color: #15323d;
 }
+
+/* English numerals, left-to-right inside numeric cells */
+.table .num-en,
+.soatable .num-en {
+  direction: ltr;
+  text-align: center;
+  unicode-bidi: plaintext;
+  font-variant-numeric: tabular-nums;
+}
+
+/* مظهر فوتر الجدول */
+.table tfoot td,
+.soatable tfoot td {
+  font-weight: 700;
+  background: #f7fbfc;
+}
+
 .signatures td {
   height: 52px;
 }
