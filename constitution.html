@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>الاستراتيجية — SOA Group</title>
+    <title>الدستور — SOA Group</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -15,7 +15,6 @@
     <link rel="stylesheet" href="assets/css/components.css" />
     <link rel="stylesheet" href="assets/css/admin.css" />
     <link rel="stylesheet" href="assets/css/utilities.css" />
-    <!-- <link rel="stylesheet" href="assets/css/constitution.css" /> -->
   </head>
   <body>
     <header class="site-header">
@@ -27,7 +26,6 @@
           aria-controls="mobileDrawer"
           aria-expanded="false"
         >
-          <!-- أيقونة بسيطة (3 خطوط) -->
           <span></span><span></span><span></span>
         </button>
         <ul class="nav-links">
@@ -43,11 +41,8 @@
         <div class="full-brand">
           <img src="./imgs/logo-2.png" alt="SOA Group" />
         </div>
-
-        <!-- روابط الديسكتوب تبقى كما هي -->
       </nav>
 
-      <!-- السلايدبار للموبايل -->
       <aside class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
         <div class="drawer-header">
           <div class="full-brand">
@@ -73,13 +68,13 @@
           </li>
         </ul>
       </aside>
-
-      <!-- خلفية للتعتيم -->
       <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
     </header>
 
     <main class="container">
       <div id="app" class="app"></div>
+
+      <!-- كتلة التوقيعات ثابتة تبقى كما هي -->
       <section class="sections">
         <h3 class="card-title">التوقيعات والاعتمادات</h3>
         <article class="card section-card">
@@ -122,6 +117,7 @@
         </article>
       </section>
     </main>
+
     <footer class="site-footer">
       <div class="full-brand">
         <img src="./imgs/logo-3.png" alt="SOA Group" />
@@ -134,14 +130,22 @@
     <script src="assets/js/guard.js"></script>
     <script src="assets/js/nav.js"></script>
     <script src="assets/js/renderer.js"></script>
+    <script type="module" src="assets/js/firebase-init.js"></script>
     <script>
       (function () {
         const cfg = window.SOA_CONFIG;
-        document.getElementById("logoutBtn").onclick = () =>
-          window.SOA_AUTH.logout();
         const url = cfg.PAGES["constitution"];
         window.currentDataUrl = url;
-        window.SOA_RENDER.renderPage(url);
+        window.FB_DOC_PATH = "soa/constitution";
+
+        function boot() {
+          window.SOA_RENDER.renderPage(url);
+        }
+        if (window.FB && window.FB.loadDoc && window.FB.saveDoc) boot();
+        else window.addEventListener("fb-ready", boot, { once: true });
+
+        const logoutBtn = document.getElementById("logoutBtn");
+        if (logoutBtn) logoutBtn.onclick = () => window.SOA_AUTH.logout();
       })();
     </script>
     <script src="assets/js/admin.js"></script>
