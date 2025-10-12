@@ -10,5 +10,6 @@ window.SOA_CONFIG = {
     goals: "data/goals.json",
     strategy: "data/strategy.json",
     constitution: "data/constitution.json",
+    ["project-model"]: "data/projectModel.json",
   },
 };
