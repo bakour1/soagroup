@@ -1,3 +1,4 @@
+// assets/js/admin.js
 (function () {
   const admin = document.documentElement.getAttribute("data-role") === "admin";
 
@@ -28,7 +29,7 @@
   }
 
   // ====== محوّل ↔ Firestore ======
-  // يحوّل rows: Array<Array>  --> Array<Map> { c0:..., c1:... }
+  // يحوّل rows: Array<Array>  --> Array<Map> { c0:..., c1:... } (مناسب لـ Firestore)
   function rowsArrayToMaps(rowArr) {
     if (!Array.isArray(rowArr)) return rowArr;
     return rowArr.map((r) => {
@@ -38,21 +39,20 @@
       return o;
     });
   }
-  // عكس السابق: Array<Map> --> Array<Array> بالترتيب c0,c1,c2...
+  // عكس السابق: Array<Map> --> Array<Array> بالترتيب c0,c1,c2... (مناسب للمحرر)
   function rowsMapsToArray(rowMaps, colCount) {
     if (!Array.isArray(rowMaps)) return rowMaps;
     return rowMaps.map((r) => {
       if (Array.isArray(r)) return r;
-      const keys = Object.keys(r || {}).sort(
-        (a, b) => Number(a.slice(1)) - Number(b.slice(1))
-      );
       const out = [];
-      const len = Number.isFinite(colCount) ? colCount : keys.length;
+      const len = Number.isFinite(colCount)
+        ? colCount
+        : Object.keys(r || {}).length;
       for (let i = 0; i < len; i++) out.push(r["c" + i] ?? "");
       return out;
     });
   }
-  // يمشي على الشجرة ويحوّل كل الجداول
+  // يمشي على الشجرة ويحوّل كل الجداول إلى Arrays للعرض داخل المحرر
   function normalizeFromCloud(data) {
     const clone = JSON.parse(JSON.stringify(data || {}));
     (clone.sections || []).forEach((sec) => {
@@ -78,7 +78,7 @@
       (sec.subsections || []).forEach((sub) => {
         if (sub && sub.table && Array.isArray(sub.table.headers)) {
           if (Array.isArray(sub.table.rows)) {
-            // حوّل المصفوفات المتداخلة لمابات لتجنّب nested arrays
+            // حوّل المصفوفات المتداخلة لمابات لتجنّب nested arrays في Firestore
             sub.table.rows = rowsArrayToMaps(sub.table.rows);
           }
           // headers و footer تبقى Arrays (لا مشكلة)
@@ -90,8 +90,6 @@
 
   // حالة الحفظ
   let data = null;
-  // let autosaveTimer = null;
-  const AUTOSAVE_MS = 1200;
   let dirty = false;
 
   function setStatus(txt) {
@@ -147,6 +145,28 @@
     }
   }
 
+  // ====== استيراد JSON ======
+  function importAndNormalize(obj) {
+    // يسمح بوجود حقول إضافية، ويركّز على الحقول الداعمة
+    const incoming = JSON.parse(JSON.stringify(obj || {}));
+
+    // ضمان المفاتيح الأساسية
+    if (!incoming.sections) incoming.sections = [];
+    if (!incoming.landing) incoming.landing = {};
+    if (!incoming.goals) incoming.goals = [];
+
+    // تطبيع الجداول (خاصة لو جاءت كـ Maps من Firestore أو Arrays خام)
+    const normalized = normalizeFromCloud(incoming);
+
+    // تعيين قيم افتراضية آمنة
+    normalized.landing.logo = normalized.landing.logo ?? "";
+    normalized.landing.title = normalized.landing.title ?? "";
+    normalized.landing.subtitle = normalized.landing.subtitle ?? "";
+    normalized.landing.body = normalized.landing.body ?? "";
+
+    return normalized;
+  }
+
   async function openEd() {
     const url = window.currentDataUrl || "data.json";
     data = await loadInitial(url);
@@ -157,7 +177,12 @@
       <div class="admin-header">
         <strong>وضع الإدارة</strong>
         <div style="display:flex;gap:8px;align-items:center">
-          <span id="saveStatus" class="muted" style="min-width:160px"></span>
+          <span id="saveStatus" class="muted" style="min-width:180px"></span>
+
+          <!-- استيراد JSON -->
+          <input id="importInput" type="file" accept="application/json" style="display:none" />
+          <button id="importJsonBtn" class="btn">استيراد JSON</button>
+
           <button id="saveCloudBtn" class="btn">حفظ للسحابة</button>
           <button id="saveJsonBtn" class="btn">تصدير JSON</button>
           <button id="closeAdminBtn" class="btn btn-ghost">إغلاق</button>
@@ -176,19 +201,23 @@
         <details open>
           <summary>الأقسام والفقرات</summary>
           <div id="sectionsEditor"></div>
-          <button id="addSection" class="btn">+ قسم جديد</button>
+          <div class="action-editor">
+            <button id="addSection" class="btn">+ قسم جديد</button>
+          </div>
         </details>
 
         <details open>
           <summary>المهمات</summary>
           <div id="goalsEditor"></div>
-          <button id="addGoalGroup" class="btn">+ فقرة أهداف جديدة</button>
+          <div class="action-editor">
+            <button id="addGoalGroup" class="btn">+ فقرة أهداف جديدة</button>
+          </div>
         </details>
       </div>
     `;
     document.body.appendChild(p);
 
-    // قيَم الهبوط
+    // تعبئة قيَم الهبوط
     document.getElementById("landLogo").value = data.landing?.logo || "";
     document.getElementById("landTitle").value = data.landing?.title || "";
     document.getElementById("landSubtitle").value =
@@ -380,9 +409,10 @@
     rSec();
     rGoals();
 
-    // ===== Inputs → تحديث الداتا + حفظ تلقائي =====
+    // ===== Inputs → تحديث الداتا =====
     p.addEventListener("input", (e) => {
       const t = e.target;
+      dirty = true;
 
       // Landing
       if (t.id === "landLogo")
@@ -436,30 +466,13 @@
         const sub = data.sections[si].subsections[sj];
         sub.table.footer[ci] = t.value;
       }
-
-      // Goals
-      if (t.classList.contains("goal-subtitle")) {
-        const gi = +t.dataset.gi;
-        data.goals[gi].subtitle = t.value;
-      }
-      if (t.classList.contains("goal-title")) {
-        const gi = +t.dataset.gi,
-          ii = +t.dataset.ii;
-        data.goals[gi].items[ii].title = t.value;
-      }
-      if (t.classList.contains("goal-done")) {
-        const gi = +t.dataset.gi,
-          ii = +t.dataset.ii;
-        data.goals[gi].items[ii].done = t.checked;
-      }
-
-      // scheduleAutosave();
     });
 
     // ===== الأزرار =====
     p.addEventListener("click", (e) => {
       const a = e.target.dataset.act;
       if (!a) return;
+      dirty = true;
 
       if (a === "add-sub") {
         const si = +e.target.dataset.si;
@@ -469,20 +482,17 @@
           texts: ["فقرة نص"],
         });
         rSec();
-        // scheduleAutosave();
       }
       if (a === "del-sec") {
         const si = +e.target.dataset.si;
         data.sections.splice(si, 1);
         rSec();
-        // scheduleAutosave();
       }
       if (a === "del-sub") {
         const si = +e.target.dataset.si,
           sj = +e.target.dataset.sj;
         data.sections[si].subsections.splice(sj, 1);
         rSec();
-        // scheduleAutosave();
       }
 
       if (a === "add-table") {
@@ -495,14 +505,12 @@
           footer: [],
         };
         rSec();
-        // scheduleAutosave();
       }
       if (a === "del-table") {
         const si = +e.target.dataset.si,
           sj = +e.target.dataset.sj;
         delete data.sections[si].subsections[sj].table;
         rSec();
-        // scheduleAutosave();
       }
       if (a === "add-col") {
         const si = +e.target.dataset.si,
@@ -512,7 +520,6 @@
         (sub.table.rows || []).forEach((r) => r.push(""));
         if (sub.table.footer) sub.table.footer.push("");
         rSec();
-        // scheduleAutosave();
       }
       if (a === "del-col") {
         const si = +e.target.dataset.si,
@@ -522,7 +529,6 @@
         (sub.table.rows || []).forEach((r) => r.pop());
         if (sub.table.footer && sub.table.footer.length) sub.table.footer.pop();
         rSec();
-        // scheduleAutosave();
       }
       if (a === "add-row") {
         const si = +e.target.dataset.si,
@@ -532,7 +538,6 @@
         sub.table.rows = sub.table.rows || [];
         sub.table.rows.push(Array.from({ length: cols }, () => ""));
         rSec();
-        // scheduleAutosave();
       }
       if (a === "del-row") {
         const si = +e.target.dataset.si,
@@ -541,7 +546,25 @@
         const sub = data.sections[si].subsections[sj];
         sub.table.rows.splice(ri, 1);
         rSec();
-        // scheduleAutosave();
+      }
+
+      // Goals
+      if (a === "add-item") {
+        const gi = +e.target.dataset.gi;
+        data.goals[gi].items = data.goals[gi].items || [];
+        data.goals[gi].items.push({ title: "", done: false });
+        rGoals();
+      }
+      if (a === "del-item") {
+        const gi = +e.target.dataset.gi,
+          ii = +e.target.dataset.ii;
+        data.goals[gi].items.splice(ii, 1);
+        rGoals();
+      }
+      if (a === "del-group") {
+        const gi = +e.target.dataset.gi;
+        data.goals.splice(gi, 1);
+        rGoals();
       }
     });
 
@@ -557,8 +580,8 @@
         } else {
           sub.table.footer = [];
         }
+        dirty = true;
         rSec();
-        // scheduleAutosave();
       }
     });
 
@@ -566,14 +589,14 @@
     p.querySelector("#addSection").onclick = () => {
       data.sections = data.sections || [];
       data.sections.push({ title: "قسم جديد", subsections: [] });
+      dirty = true;
       rSec();
-      // scheduleAutosave();
     };
     p.querySelector("#addGoalGroup").onclick = () => {
       data.goals = data.goals || [];
       data.goals.push({ subtitle: "فقرة أهداف جديدة", items: [] });
+      dirty = true;
       rGoals();
-      // scheduleAutosave();
     };
     p.querySelector("#saveJsonBtn").onclick = () => {
       const file = (window.currentDataUrl || "data.json").split("/").pop();
@@ -582,6 +605,93 @@
     p.querySelector("#saveCloudBtn").onclick = saveCloudNow;
     p.querySelector("#closeAdminBtn").onclick = () => p.remove();
 
+    // ====== استيراد JSON (زر + إدخال ملف) ======
+    const importBtn = p.querySelector("#importJsonBtn");
+    const importInput = p.querySelector("#importInput");
+
+    importBtn.onclick = () => importInput.click();
+
+    importInput.onchange = async (ev) => {
+      const file = ev.target.files?.[0];
+      if (!file) return;
+
+      try {
+        if (file.size > 2 * 1024 * 1024) {
+          alert("الملف أكبر من 2MB. رجاءً استخدم ملفًا أصغر.");
+          return;
+        }
+        const text = await file.text();
+        let obj;
+        try {
+          obj = JSON.parse(text);
+        } catch {
+          alert("الملف ليس JSON صالحًا.");
+          return;
+        }
+
+        const imported = importAndNormalize(obj);
+
+        // تأكيد: دمج أم استبدال؟
+        const doMerge = confirm(
+          "هل تريد دمج المحتوى مع الحالي؟\n'OK' للدمج — 'Cancel' للاستبدال الكامل."
+        );
+        if (doMerge) {
+          data = data || {};
+          data.landing = {
+            ...(data.landing || {}),
+            ...(imported.landing || {}),
+          };
+          data.sections = Array.isArray(data.sections)
+            ? data.sections.concat(imported.sections || [])
+            : imported.sections || [];
+          data.goals = Array.isArray(data.goals)
+            ? data.goals.concat(imported.goals || [])
+            : imported.goals || [];
+        } else {
+          data = imported;
+        }
+
+        // تعبئة حقول Landing
+        document.getElementById("landLogo").value = data.landing?.logo || "";
+        document.getElementById("landTitle").value = data.landing?.title || "";
+        document.getElementById("landSubtitle").value =
+          data.landing?.subtitle || "";
+        document.getElementById("landBody").value = data.landing?.body || "";
+
+        // إعادة رسم
+        rSec();
+        rGoals();
+
+        dirty = true;
+        setStatus("✓ تم الاستيراد من الملف: " + file.name);
+      } catch (e) {
+        console.error(e);
+        alert("فشل الاستيراد: " + (e?.message || e));
+      } finally {
+        importInput.value = "";
+      }
+    };
+
+    // ====== (اختياري) سحب وإفلات ملف JSON على اللوحة ======
+    p.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      p.classList.add("dragging");
+    });
+    p.addEventListener("dragleave", () => p.classList.remove("dragging"));
+    p.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      p.classList.remove("dragging");
+      const file = e.dataTransfer?.files?.[0];
+      if (!file) return;
+      if (file.type !== "application/json") {
+        alert("أسقط ملف JSON صالحًا.");
+        return;
+      }
+      importInput.files = e.dataTransfer.files; // أعد استخدام نفس المعالج
+      importInput.onchange({ target: importInput });
+    });
+
+    // تحذير عند إغلاق الصفحة مع تغييرات غير محفوظة
     window.addEventListener("beforeunload", (ev) => {
       if (dirty) {
         ev.preventDefault();
