@@ -87,94 +87,98 @@
   }
 
   function renderTable(tbl) {
-  if (!tbl || !Array.isArray(tbl.headers) || !Array.isArray(tbl.rows)) return null;
+    if (!tbl || !Array.isArray(tbl.headers) || !Array.isArray(tbl.rows))
+      return null;
 
-  // === استنتاج نوع كل عمود (أولوية لصيغة colFormats إن وُجدت)
-  const inferType = (h, i) => {
-    if (i === 0) return "text";
-    const hs = String(h || "").toLowerCase();
-    if (/\%/.test(hs) || /percent|النسبة/.test(hs)) return "percent";
-    if (/\$/.test(hs) || /usd/.test(hs) || /دولار/.test(hs)) return "currency";
-    return "number";
-  };
-  const colTypes = Array.isArray(tbl.colFormats) && tbl.colFormats.length === tbl.headers.length
-    ? tbl.colFormats
-    : tbl.headers.map(inferType);
+    // === استنتاج نوع كل عمود (أولوية لصيغة colFormats إن وُجدت)
+    const inferType = (h, i) => {
+      if (i === 0) return "text";
+      const hs = String(h || "").toLowerCase();
+      if (/\%/.test(hs) || /percent|النسبة/.test(hs)) return "percent";
+      if (/\$/.test(hs) || /usd/.test(hs) || /دولار/.test(hs))
+        return "currency";
+      return "number";
+    };
+    const colTypes =
+      Array.isArray(tbl.colFormats) &&
+      tbl.colFormats.length === tbl.headers.length
+        ? tbl.colFormats
+        : tbl.headers.map(inferType);
 
-  const table = document.createElement("table");
-  table.className = "table soatable";
+    const table = document.createElement("table");
+    table.className = "table soatable";
 
-  const thead = document.createElement("thead");
-  const trh = document.createElement("tr");
-  tbl.headers.forEach((h, i) => {
-    const th = document.createElement("th");
-    th.textContent = h ?? "";
-    if (i > 0) th.classList.add("num-en");
-    trh.appendChild(th);
-  });
-  thead.appendChild(trh);
-  table.appendChild(thead);
+    const thead = document.createElement("thead");
+    const trh = document.createElement("tr");
+    tbl.headers.forEach((h, i) => {
+      const th = document.createElement("th");
+      th.textContent = h ?? "";
+      if (i > 0) th.classList.add("num-en");
+      trh.appendChild(th);
+    });
+    thead.appendChild(trh);
+    table.appendChild(thead);
 
-  const colCount = tbl.headers.length;
-  const sums = Array(colCount).fill(0);
-  const hadVal = Array(colCount).fill(false);
+    const colCount = tbl.headers.length;
+    const sums = Array(colCount).fill(0);
+    const hadVal = Array(colCount).fill(false);
 
-  // مُنسِّق الخلية حسب النوع
-  const formatCell = (num, type) => {
-    const base = formatEn(num);
-    if (type === "percent") return base + " %";
-    if (type === "currency") return "$ " + base; // بدّلها إلى base + " $" لو بدك الرمز بعد الرقم
-    return base;
-  };
+    // مُنسِّق الخلية حسب النوع
+    const formatCell = (num, type) => {
+      const base = formatEn(num);
+      if (type === "percent") return base + " %";
+      if (type === "currency") return "$ " + base; // بدّلها إلى base + " $" لو بدك الرمز بعد الرقم
+      return base;
+    };
 
-  const tbody = document.createElement("tbody");
-  (tbl.rows || []).forEach((row) => {
-    const tr = document.createElement("tr");
-    for (let i = 0; i < colCount; i++) {
-      const td = document.createElement("td");
-      const cell = row && row[i] != null ? row[i] : "";
-      const type = colTypes[i] || (i === 0 ? "text" : "number");
+    const tbody = document.createElement("tbody");
+    (tbl.rows || []).forEach((row) => {
+      const tr = document.createElement("tr");
+      for (let i = 0; i < colCount; i++) {
+        const td = document.createElement("td");
+        const cell = row && row[i] != null ? row[i] : "";
+        const type = colTypes[i] || (i === 0 ? "text" : "number");
 
-      if (i === 0 || type === "text") {
-        td.textContent = String(cell);
-      } else {
-        const num = parseNumber(cell);
-        td.classList.add("num-en");
-        if (Number.isFinite(num)) {
-          td.textContent = formatCell(num, type);
-          sums[i] += num;
-          hadVal[i] = true;
+        if (i === 0 || type === "text") {
+          td.textContent = String(cell);
         } else {
-          // لو الخلية نصّ (مثلاً "N/A") نعرضها فارغة رقمياً
-          td.textContent = "";
+          const num = parseNumber(cell);
+          td.classList.add("num-en");
+          if (Number.isFinite(num)) {
+            td.textContent = formatCell(num, type);
+            sums[i] += num;
+            hadVal[i] = true;
+          } else {
+            // لو الخلية نصّ (مثلاً "N/A") نعرضها فارغة رقمياً
+            td.textContent = "";
+          }
         }
+        tr.appendChild(td);
       }
-      tr.appendChild(td);
-    }
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
 
-  if (Array.isArray(tbl.footer)) {
-    const tfoot = document.createElement("tfoot");
-    const trf = document.createElement("tr");
-    const f0 = document.createElement("td");
-    f0.textContent = tbl.footer[0] || "الإجمالي";
-    trf.appendChild(f0);
-    for (let i = 1; i < colCount; i++) {
-      const tdf = document.createElement("td");
-      tdf.classList.add("num-en");
-      if (hadVal[i]) {
-        tdf.textContent = formatCell(sums[i], colTypes[i] || "number");
-      } else {
-        tdf.textContent = "";
+    if (Array.isArray(tbl.footer)) {
+      const tfoot = document.createElement("tfoot");
+      const trf = document.createElement("tr");
+      const f0 = document.createElement("td");
+      f0.textContent = tbl.footer[0] || "الإجمالي";
+      trf.appendChild(f0);
+      for (let i = 1; i < colCount; i++) {
+        const tdf = document.createElement("td");
+        tdf.classList.add("num-en");
+        if (hadVal[i]) {
+          tdf.textContent = formatCell(sums[i], colTypes[i] || "number");
+        } else {
+          tdf.textContent = "";
+        }
+        trf.appendChild(tdf);
       }
-      trf.appendChild(tdf);
+      tfoot.appendChild(trf);
+      table.appendChild(tfoot);
     }
-    tfoot.appendChild(trf);
-    table.appendChild(tfoot);
-  }
-  return table;
+    return table;
   }
 
   function renderLanding(root, l) {

@@ -319,13 +319,13 @@ th {
 .nav-links .dropdown {
   position: absolute;
   right: 0;
-  top: calc(100% + 8px);
+  top: calc(100%);
   min-width: 240px;
   max-width: 320px;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 8px;
+  padding: 8px 0;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
   display: none;
   z-index: 200;
@@ -353,7 +353,7 @@ th {
   align-items: center;
   justify-content: space-between;
   padding: 10px 12px;
-  border-radius: 10px;
+  /* border-radius: 10px; */
   color: var(--text);
   text-decoration: none;
   transition: background 0.15s ease, transform 0.15s ease;
@@ -371,7 +371,7 @@ th {
 
 /* المستوى الثاني (يظهر يسار الأول في RTL) */
 .nav-links .dropdown.level-2 {
-  right: calc(100% + 12px);
+  right: calc(100%);
   top: 0;
   min-width: 220px;
   max-width: 320px;
@@ -463,7 +463,7 @@ th {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
-  margin: 6px 0;
+  /* margin: 6px 0; */
   padding: 0;
   overflow: hidden;
 }
@@ -472,7 +472,7 @@ th {
   list-style: none;
   cursor: pointer;
   user-select: none;
-  padding: 12px 14px;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -486,7 +486,8 @@ th {
 .drawer-links details > summary .chev {
   transition: transform 0.2s ease, opacity 0.2s ease;
   opacity: 0.85;
-  font-size: 12px;
+  font-size: 1.5rem;
+  line-height: 0.8;
 }
 .drawer-links details[open] > summary .chev {
   transform: rotate(180deg);
