@@ -12,7 +12,9 @@ window.SOA_CONFIG = {
     goals: "data/goals.json",
     strategy: "data/strategy.json",
     constitution: "data/constitution.json",
-    model: "../../data/projects/new/model.json",
-    feasibility: "../../data/projects/new/feasibility.json",
+    new_model: "../../data/projects/new/model.json",
+    new_feasibility: "../../data/projects/new/feasibility.json",
+    soa_phone_model: "../../data/projects/soa_phone/model.json",
+    soa_phone_feasibility: "../../data/projects/soa_phone/feasibility.json",
   },
 };

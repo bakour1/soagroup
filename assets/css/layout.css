@@ -288,6 +288,119 @@ th {
   opacity: 1;
 }
 
+/* ===== Dropdown Menus (RTL) ===== */
+.nav-links .menu.has-dropdown {
+  position: relative;
+}
+.nav-links .menu .menu-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 1rem;
+  font-family: "Cairo", system-ui, -apple-system, Segoe UI, Roboto,
+    "Helvetica Neue", Arial;
+}
+.nav-links .menu .menu-btn .caret {
+  opacity: 0.8;
+  /* font-size: 1.5rem; */
+}
+.nav-links .menu:hover .menu-btn,
+.nav-links .menu.open .menu-btn {
+  background: var(--brand-2);
+}
+
+/* صندوق المنيو */
+.nav-links .dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 240px;
+  max-width: 320px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+  display: none;
+  z-index: 200;
+  transform-origin: top right;
+  transform: translateY(6px) scale(0.98);
+  opacity: 0;
+  transition: 0.18s ease;
+}
+.nav-links .menu:hover > .dropdown,
+.nav-links .menu:focus-within > .dropdown,
+.nav-links .menu.open > .dropdown {
+  display: grid;
+  gap: 4px;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* عناصر المستوى الأول */
+.nav-links .dropdown.level-1 > li {
+  position: relative;
+  list-style: none;
+}
+.nav-links .dropdown a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--text);
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.nav-links .dropdown a:hover {
+  background: var(--brand-2);
+  color: #fff;
+}
+
+.nav-links .dropdown .submenu-title .chev {
+  opacity: 0.6;
+  font-size: 12px;
+  color: inherit;
+}
+
+/* المستوى الثاني (يظهر يسار الأول في RTL) */
+.nav-links .dropdown.level-2 {
+  right: calc(100% + 12px);
+  top: 0;
+  min-width: 220px;
+  max-width: 320px;
+  list-style: none;
+}
+.nav-links .dropdown.level-1 > li > .dropdown.level-2 {
+  position: absolute;
+  display: none;
+  transform-origin: top right;
+  transform: translateY(6px) scale(0.98);
+  opacity: 0;
+  transition: 0.18s ease;
+}
+.nav-links .dropdown.level-1 > li:hover > .dropdown.level-2,
+.nav-links .dropdown.level-1 > li:focus-within > .dropdown.level-2,
+.nav-links .dropdown.level-1 > li.open > .dropdown.level-2 {
+  display: grid;
+  gap: 4px;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* تحسين لمسة اللمس */
+@media (hover: none) {
+  .nav-links .menu:hover > .dropdown {
+    display: none;
+  }
+}
+
 /* تحسين استجابة الهيدر واللاندنج */
 @media (max-width: 992px) {
   .container {
@@ -344,4 +457,76 @@ th {
   #menuBtn.hamburger {
     display: none;
   }
+}
+/* ===== Mobile Drawer Accordion ===== */
+.drawer-links details {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  margin: 6px 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.drawer-links details > summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--accent);
+  font-weight: 600;
+}
+.drawer-links details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.drawer-links details > summary .chev {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  opacity: 0.85;
+  font-size: 12px;
+}
+.drawer-links details[open] > summary .chev {
+  transform: rotate(180deg);
+}
+
+/* محتوى المستوى الأول */
+.drawer-links .accordion-group {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  padding-top: 0;
+}
+
+/* تفاصيل المستوى الثاني */
+.drawer-links .accordion-group details {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.drawer-links .accordion-group details > summary {
+  padding: 10px 12px;
+  font-weight: 500;
+}
+
+/* روابط المستوى الأخير */
+.drawer-links .sub-links {
+  list-style: none;
+  margin: 6px 8px 10px;
+  padding: 0 6px 6px;
+  display: grid;
+  gap: 6px;
+}
+.drawer-links .sub-links a {
+  display: block;
+  background: var(--brand);
+  color: var(--accent);
+  text-decoration: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+.drawer-links .sub-links a:active {
+  background: rgba(255, 255, 255, 0.22);
 }

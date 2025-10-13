@@ -29,24 +29,78 @@
         >
           <span></span><span></span><span></span>
         </button>
-
         <ul class="nav-links">
           <li>
             <button id="logoutBtn" class="btn btn-ghost">تسجيل الخروج</button>
           </li>
           <li class="sep"></li>
-          <li><a href="/index.html">الرئيسية</a></li>
-          <li><a href="/goals.html">المهمات</a></li>
-          <li><a href="/strategy.html">الاستراتيجية</a></li>
-          <li><a href="/constitution.html">الدستور</a></li>
-        </ul>
+          <li><a href="index.html">الرئيسية</a></li>
+          <li><a href="goals.html">المهمات</a></li>
+          <li><a href="strategy.html">الاستراتيجية</a></li>
+          <li><a href="constitution.html">الدستور</a></li>
+          <li class="menu has-dropdown">
+            <button
+              class="menu-btn btn btn-ghost"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              <span>المشاريع</span>
+              <span class="caret" aria-hidden="true">▾</span>
+            </button>
 
+            <!-- المستوى الأول -->
+            <ul class="dropdown level-1" role="menu">
+              <!-- إنشاء -->
+              <li class="has-dropdown">
+                <a href="#" class="submenu-title" role="menuitem" tabindex="-1">
+                  إنشاء
+                  <span class="chev" aria-hidden="true">◀</span>
+                </a>
+                <!-- المستوى الثاني -->
+                <ul class="dropdown level-2" role="menu">
+                  <li>
+                    <a role="menuitem" href="projects/new/model.html"
+                      >نموذج المشروع</a
+                    >
+                  </li>
+                  <li>
+                    <a role="menuitem" href="projects/new/feasibility.html"
+                      >جدوى المشروع</a
+                    >
+                  </li>
+                </ul>
+              </li>
+
+              <!-- SOA Phone -->
+              <li class="has-dropdown">
+                <a href="#" class="submenu-title" role="menuitem" tabindex="-1">
+                  SOA Phone
+                  <span class="chev" aria-hidden="true">◀</span>
+                </a>
+                <!-- المستوى الثاني -->
+                <ul class="dropdown level-2" role="menu">
+                  <li>
+                    <a role="menuitem" href="projects/soa_phone/model.html"
+                      >نموذج المشروع</a
+                    >
+                  </li>
+                  <li>
+                    <a
+                      role="menuitem"
+                      href="projects/soa_phone/feasibility.html"
+                      >جدوى المشروع</a
+                    >
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
         <div class="full-brand">
-          <img src="/imgs/logo-2.png" alt="SOA Group" />
+          <img src="../../imgs/logo-2.png" alt="SOA Group" />
         </div>
       </nav>
 
-      <!-- السلايدبار للموبايل -->
       <aside class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
         <div class="drawer-header">
           <div class="full-brand">
@@ -61,10 +115,55 @@
           </button>
         </div>
         <ul class="drawer-links">
-          <li><a href="/index.html">الرئيسية</a></li>
-          <li><a href="/goals.html">الأهداف</a></li>
-          <li><a href="/strategy.html">الاستراتيجية</a></li>
-          <li><a href="/constitution.html">الدستور</a></li>
+          <li><a href="index.html">الرئيسية</a></li>
+          <li><a href="goals.html">الأهداف</a></li>
+          <li><a href="strategy.html">الاستراتيجية</a></li>
+          <li><a href="constitution.html">الدستور</a></li>
+
+          <!-- المشاريع (أكوردين متعدد المستويات) -->
+          <li class="accordion">
+            <details>
+              <summary>
+                <span>المشاريع</span>
+                <span class="chev" aria-hidden="true">▾</span>
+              </summary>
+
+              <div class="accordion-group">
+                <!-- إنشاء -->
+                <details>
+                  <summary>
+                    <span>إنشاء</span>
+                    <span class="chev" aria-hidden="true">▾</span>
+                  </summary>
+                  <ul class="sub-links">
+                    <li><a href="projects/new/model.html">نموذج المشروع</a></li>
+                    <li>
+                      <a href="projects/new/feasibility.html">جدوى المشروع</a>
+                    </li>
+                  </ul>
+                </details>
+
+                <!-- SOA Phone -->
+                <details>
+                  <summary>
+                    <span>SOA Phone</span>
+                    <span class="chev" aria-hidden="true">▾</span>
+                  </summary>
+                  <ul class="sub-links">
+                    <li>
+                      <a href="projects/soa_phone/model.html">نموذج المشروع</a>
+                    </li>
+                    <li>
+                      <a href="projects/soa_phone/feasibility.html"
+                        >جدوى المشروع</a
+                      >
+                    </li>
+                  </ul>
+                </details>
+              </div>
+            </details>
+          </li>
+
           <li>
             <button id="logoutBtnMobile" class="btn btn-ghost">
               تسجيل الخروج
@@ -72,7 +171,6 @@
           </li>
         </ul>
       </aside>
-
       <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
     </header>
 

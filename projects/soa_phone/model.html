@@ -1,20 +1,21 @@
+<!-- projects\new\model.html -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>الدستور — SOA Group</title>
+    <title>نموذج المشروع — SOA Group</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="assets/css/base.css" />
-    <link rel="stylesheet" href="assets/css/layout.css" />
-    <link rel="stylesheet" href="assets/css/components.css" />
-    <link rel="stylesheet" href="assets/css/admin.css" />
-    <link rel="stylesheet" href="assets/css/utilities.css" />
+    <link rel="stylesheet" href="../../assets/css/base.css" />
+    <link rel="stylesheet" href="../../assets/css/layout.css" />
+    <link rel="stylesheet" href="../../assets/css/components.css" />
+    <link rel="stylesheet" href="../../assets/css/admin.css" />
+    <link rel="stylesheet" href="../../assets/css/utilities.css" />
   </head>
   <body>
     <header class="site-header">
@@ -33,10 +34,10 @@
             <button id="logoutBtn" class="btn btn-ghost">تسجيل الخروج</button>
           </li>
           <li class="sep"></li>
-          <li><a href="index.html">الرئيسية</a></li>
-          <li><a href="goals.html">المهمات</a></li>
-          <li><a href="strategy.html">الاستراتيجية</a></li>
-          <li><a class="active" href="constitution.html">الدستور</a></li>
+          <li><a href="/index.html">الرئيسية</a></li>
+          <li><a href="/goals.html">المهمات</a></li>
+          <li><a href="/strategy.html">الاستراتيجية</a></li>
+          <li><a href="/constitution.html">الدستور</a></li>
           <li class="menu has-dropdown">
             <button
               class="menu-btn btn btn-ghost"
@@ -114,10 +115,10 @@
           </button>
         </div>
         <ul class="drawer-links">
-          <li><a href="index.html">الرئيسية</a></li>
-          <li><a href="goals.html">الأهداف</a></li>
-          <li><a href="strategy.html">الاستراتيجية</a></li>
-          <li><a class="active" href="constitution.html">الدستور</a></li>
+          <li><a href="/index.html">الرئيسية</a></li>
+          <li><a href="/goals.html">الأهداف</a></li>
+          <li><a href="/strategy.html">الاستراتيجية</a></li>
+          <li><a href="/constitution.html">الدستور</a></li>
 
           <!-- المشاريع (أكوردين متعدد المستويات) -->
           <li class="accordion">
@@ -135,7 +136,9 @@
                     <span class="chev" aria-hidden="true">▾</span>
                   </summary>
                   <ul class="sub-links">
-                    <li><a href="projects/new/model.html">نموذج المشروع</a></li>
+                    <li>
+                      <a href="/projects/new/model.html">نموذج المشروع</a>
+                    </li>
                     <li>
                       <a href="projects/new/feasibility.html">جدوى المشروع</a>
                     </li>
@@ -172,84 +175,41 @@
       </aside>
       <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
     </header>
-
     <main class="container">
       <div id="app" class="app"></div>
-
-      <!-- كتلة التوقيعات ثابتة تبقى كما هي -->
-      <section class="sections">
-        <h3 class="card-title">التوقيعات والاعتمادات</h3>
-        <article class="card section-card">
-          <table class="signatures">
-            <thead>
-              <tr>
-                <th>الاسم</th>
-                <th>التوقيع</th>
-                <th>التاريخ</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>سامي حسان البكور</td>
-                <td></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>عمر مروان البكور</td>
-                <td></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>عبدالرحمن أنور اليوسف</td>
-                <td></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>عمرو محمد أمين بكور</td>
-                <td></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>عامر مروان البكور</td>
-                <td></td>
-                <td></td>
-              </tr>
-            </tbody>
-          </table>
-        </article>
-      </section>
     </main>
-
     <footer class="site-footer">
       <div class="full-brand">
-        <img src="./imgs/logo-3.png" alt="SOA Group" />
+        <img src="../../imgs/logo-3.png" alt="SOA Group" />
       </div>
       <p>© 2025 SOA Group — مجموعة سوا</p>
     </footer>
 
-    <script src="assets/js/config.js"></script>
-    <script src="assets/js/auth.js"></script>
-    <script src="assets/js/guard.js"></script>
-    <script src="assets/js/nav.js"></script>
-    <script src="assets/js/renderer.js"></script>
-    <script type="module" src="assets/js/firebase-init.js"></script>
+    <script src="../../assets/js/config.js"></script>
+    <script src="../../assets/js/auth.js"></script>
+    <script src="../../assets/js/guard.js"></script>
+    <script src="../../assets/js/nav.js"></script>
+    <script src="../../assets/js/renderer.js"></script>
+    <script type="module" src="../../assets/js/firebase-init.js"></script>
     <script>
       (function () {
         const cfg = window.SOA_CONFIG;
-        const url = cfg.PAGES["constitution"];
+        const url = cfg.PAGES["model"];
         window.currentDataUrl = url;
-        window.FB_DOC_PATH = "soa/constitution";
+
+        // 👈 مهم: مسار الوثيقة الخاصة بصفحة model
+        window.FB_DOC_PATH = "soa/model";
 
         function boot() {
           window.SOA_RENDER.renderPage(url);
         }
-        if (window.FB && window.FB.loadDoc && window.FB.saveDoc) boot();
+        if (window.FB && window.FB.loadDoc) boot();
         else window.addEventListener("fb-ready", boot, { once: true });
 
-        const logoutBtn = document.getElementById("logoutBtn");
-        if (logoutBtn) logoutBtn.onclick = () => window.SOA_AUTH.logout();
+        const btn = document.getElementById("logoutBtn");
+        if (btn) btn.onclick = () => window.SOA_AUTH.logout();
       })();
     </script>
-    <script src="assets/js/admin.js"></script>
+    <script src="../../assets/js/admin.js"></script>
   </body>
 </html>
