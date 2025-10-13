@@ -33,7 +33,7 @@ window.FB = {
   async loadDoc(path) {
     const ref = doc(db, ...path.split("/"));
     const snap = await getDoc(ref);
-    if (!snap.exists()) throw new Error("Document not found");
+    if (snap.exists()) throw new Error("Document not found");
     const { _updatedAt, ...rest } = snap.data() || {};
     return rest;
   },
