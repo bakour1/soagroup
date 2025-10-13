@@ -70,16 +70,61 @@
   function parseNumber(val) {
     if (typeof val === "number") return Number.isFinite(val) ? val : NaN;
     if (typeof val !== "string") return NaN;
+
     let s = String(val).trim();
-    s = s.replace(/\u066B/g, ".").replace(/\u066C/g, ","); // ⟂ العربية
-    if (s.includes(",") && s.includes(".")) s = s.replace(/,/g, "");
-    s = s.replace(/\u060C/g, ",");
-    if (s.includes(",") && !s.includes(".")) s = s.replace(/,/g, ".");
-    s = s.replace(/[^0-9.\-eE]/g, "");
+
+    // 1) توحيد رموز السالب (Unicode minus & dashes) إلى ASCII hyphen -
+    s = s.replace(/[\u2212\uFE63\uFF0D\u2010\u2011\u2012\u2013\u2014]/g, "-");
+
+    // 2) التقاط صيغة الأقواس (تعني رقم سالب): (18000) => -18000
+    const hadParens = /^\s*\(\s*.*\s*\)\s*$/.test(s);
+    if (hadParens) s = s.replace(/[()]/g, "");
+
+    // 3) توحيد الفواصل العربية
+    s = s
+      .replace(/\u066B/g, ".") // Arabic decimal separator
+      .replace(/\u066C/g, ",") // Arabic thousands separator
+      .replace(/\u060C/g, ","); // Arabic comma
+
+    // 4) إزالة الفراغات العادية وغير القابلة للكسر
+    s = s.replace(/[\u00A0\s]/g, "");
+
+    // 5) السماح فقط بأرقام/فواصل/نقطة/سالب/ترميز علمي
+    s = s.replace(/[^0-9.,\-eE]/g, "");
+
+    // 6) حسم منطق الفواصل: آلاف vs. عشرية
+    if (s.includes(".") && s.includes(",")) {
+      // نحدد آخر فاصل للجزء العشري: أيهما يأتي أخيراً يُعدّ فاصلاً عشرياً
+      const lastDot = s.lastIndexOf(".");
+      const lastComma = s.lastIndexOf(",");
+      if (lastComma > lastDot) {
+        // الفاصلة عشريّة => أزل النقاط (آلاف) وحوّل آخر فاصلة لنقطة
+        s = s.replace(/\./g, "");
+        s = s.replace(/,/, ".");
+        s = s.replace(/,/g, ""); // أي فواصل متبقية تُزال
+      } else {
+        // النقطة عشريّة => أزل كل الفواصل (تكون آلاف)
+        s = s.replace(/,/g, "");
+      }
+    } else if (s.includes(",")) {
+      // لو فقط فاصلة: جرّب نمط آلاف 1,234,567.89 => أزل الفواصل
+      if (/\d{1,3}(,\d{3})+(\.\d+)?$/.test(s)) {
+        s = s.replace(/,/g, "");
+      } else {
+        // خلاف ذلك اعتبرها عشريّة
+        s = s.replace(/,/g, ".");
+      }
+    }
+
+    // 7) حالات غير صالحة
     if (!s || s === "-" || s === "." || s === "-.") return NaN;
-    const n = parseFloat(s);
-    return Number.isFinite(n) ? n : NaN;
+
+    let n = parseFloat(s);
+    if (!Number.isFinite(n)) return NaN;
+    if (hadParens) n = -Math.abs(n); // الأقواس تعني سالب
+    return n;
   }
+
   function formatEn(num, frac = 2) {
     return new Intl.NumberFormat("en-US", {
       maximumFractionDigits: frac,
