@@ -87,6 +87,8 @@
   background: #0e8aa0;
   color: #ffffff;
   box-shadow: 0 3px 14px rgba(12, 82, 96, 0.1);
+  flex-direction: row;
+  flex-wrap: wrap;
 }
 .landing-card img.logo {
   width: 110px;
