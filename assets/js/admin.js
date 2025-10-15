@@ -224,8 +224,68 @@
       data.landing?.subtitle || "";
     document.getElementById("landBody").value = data.landing?.body || "";
 
+    // ===== حفظ حالة الفتح للـ details بين إعادة الرسم =====
+    const openState = {
+      sections: {}, // section index -> boolean (open)
+      subsections: {}, // "si:sj" -> boolean
+      goals: {}, // goal index -> boolean
+    };
+
+    function captureOpenState() {
+      // Sections
+      document
+        .querySelectorAll("#sectionsEditor .editor-card details")
+        .forEach((d) => {
+          const secInput = d.querySelector(".sec-title");
+          const si = secInput ? Number(secInput.dataset.si) : NaN;
+          if (!Number.isNaN(si)) {
+            openState.sections[si] = !!d.open;
+          }
+          // subsections
+          d.querySelectorAll(".sub-editor details").forEach((sd) => {
+            const subInput = sd
+              .closest(".sub-editor")
+              ?.querySelector(".sub-title");
+            const sj = subInput ? Number(subInput.dataset.sj) : NaN;
+            if (!Number.isNaN(si) && !Number.isNaN(sj)) {
+              openState.subsections[`${si}:${sj}`] = !!sd.open;
+            }
+          });
+        });
+
+      // Goals
+      document
+        .querySelectorAll("#goalsEditor .editor-card details")
+        .forEach((d) => {
+          const giElem = d.querySelector(".goal-subtitle");
+          const gi = giElem ? Number(giElem.dataset.gi) : NaN;
+          if (!Number.isNaN(gi)) {
+            openState.goals[gi] = !!d.open;
+          }
+        });
+    }
+
+    function setArrow(det) {
+      const arrow = det.querySelector(".arrow");
+      if (!arrow) return;
+      if (det.open) {
+        arrow.textContent = "▾";
+        arrow.style.transform = "rotate(90deg)";
+      } else {
+        arrow.textContent = "▸";
+        arrow.style.transform = "rotate(0deg)";
+      }
+    }
+
     // ===== الأقسام (مع سهم دوّار وتدرجات) =====
     function rSec() {
+      // التقط الحالة الحالية قبل إعادة البناء
+      try {
+        captureOpenState();
+      } catch (e) {
+        /* ignore */
+      }
+
       const host = document.getElementById("sectionsEditor");
       host.innerHTML = "";
       (data.sections || []).forEach((s, si) => {
@@ -233,7 +293,12 @@
         cardWrap.className = "editor-card";
 
         const det = document.createElement("details");
-        if (!s.title || (s.subsections || []).length === 0) det.open = true;
+        // استعادة حالة الفتح إذا مخزنة، وإلا افتح حسب شرط افتراضي
+        if (openState.sections.hasOwnProperty(si)) {
+          det.open = !!openState.sections[si];
+        } else {
+          det.open = !s.title || (s.subsections || []).length === 0;
+        }
 
         // summary مع سهم (span.arrow) + عنوان
         const summ = document.createElement("summary");
@@ -246,6 +311,12 @@
                        </span>
                        <span class="summary-right">قسم ${si + 1}</span>`;
         det.appendChild(summ);
+
+        // عند toggle حدّث السهم والحالة المخزنة
+        det.addEventListener("toggle", () => {
+          setArrow(det);
+          openState.sections[si] = !!det.open;
+        });
 
         const content = document.createElement("div");
         content.className = "sec-content";
@@ -264,137 +335,179 @@
 
           const subDiv = document.createElement("div");
           subDiv.className = "sub-editor";
-          subDiv.innerHTML = `
-        <label>عنوان فرعي
-          <input data-si="${si}" data-sj="${sj}" class="sub-title" value="${esc(
+
+          const inner = document.createElement("div");
+          inner.innerHTML = `
+      <label>عنوان فرعي
+        <input data-si="${si}" data-sj="${sj}" class="sub-title" value="${esc(
             sub.subtitle || ""
           )}"/>
-        </label>
+      </label>
 
-        <label>النصوص (كل سطر نص)
-          <textarea rows="4" data-si="${si}" data-sj="${sj}" class="sub-texts">${esc(
+      <label>النصوص (كل سطر نص)
+        <textarea rows="4" data-si="${si}" data-sj="${sj}" class="sub-texts">${esc(
             textsStr
           )}</textarea>
-        </label>
-
-        <details ${hasTable ? "open" : ""}>
-          <summary>جدول (اختياري)</summary>
-          <div class="table-editor" data-si="${si}" data-sj="${sj}">
-            ${
-              hasTable
-                ? `
-            <div class="tbl-row">
-              <strong>العناوين (Headers)</strong>
-              <div class="tbl-grid tbl-headers">
-                ${(sub.table.headers || [])
-                  .map(
-                    (h, ci) =>
-                      `<input class="tbl-h" data-si="${si}" data-sj="${sj}" data-ci="${ci}" value="${esc(
-                        h
-                      )}" />`
-                  )
-                  .join("")}
-              </div>
-              <div class="action-editor">
-                <button class="btn" data-act="add-col" data-si="${si}" data-sj="${sj}">+ عمود</button>
-                <button class="btn danger" data-act="del-col" data-si="${si}" data-sj="${sj}">حذف آخر عمود</button>
-              </div>
-            </div>
-
-            <div class="tbl-row">
-              <strong>أنواع الأعمدة (colFormats)</strong>
-              <div class="tbl-grid tbl-formats">
-                ${Array.from({ length: colsCount })
-                  .map((_, ci) => {
-                    const fmt =
-                      (sub.table.colFormats && sub.table.colFormats[ci]) ||
-                      (ci === 0 ? "text" : "number");
-                    return `
-                      <select class="tbl-format"
-                              data-si="${si}" data-sj="${sj}" data-ci="${ci}">
-                        <option value="text"     ${
-                          fmt === "text" ? "selected" : ""
-                        }>نص</option>
-                        <option value="number"   ${
-                          fmt === "number" ? "selected" : ""
-                        }>Number</option>
-                        <option value="currency" ${
-                          fmt === "currency" ? "selected" : ""
-                        }>Currency</option>
-                        <option value="percent"  ${
-                          fmt === "percent" ? "selected" : ""
-                        }>Percent</option>
-                      </select>
-                    `;
-                  })
-                  .join("")}
-              </div>
-            </div>
-
-            <div class="tbl-row">
-              <strong>الصفوف (Rows)</strong>
-              <div class="tbl-rows" data-si="${si}" data-sj="${sj}">
-                ${(sub.table.rows || [])
-                  .map(
-                    (row, ri) => `
-                    <div class="tbl-grid">
-                      ${Array.from({ length: colsCount })
-                        .map(
-                          (_, ci) =>
-                            `<input class="tbl-cell" data-si="${si}" data-sj="${sj}" data-ri="${ri}" data-ci="${ci}" value="${esc(
-                              row?.[ci] ?? ""
-                            )}" />`
-                        )
-                        .join("")}
-                      <button class="btn danger" data-act="del-row" data-si="${si}" data-sj="${sj}" data-ri="${ri}">حذف الصف</button>
-                    </div>
-                  `
-                  )
-                  .join("")}
-              </div>
-              <div class="action-editor">
-                <button class="btn" data-act="add-row" data-si="${si}" data-sj="${sj}">+ صف</button>
-                <button class="btn danger" data-act="del-table" data-si="${si}" data-sj="${sj}">حذف الجدول</button>
-              </div>
-            </div>
-
-            <div class="tbl-row">
-              <label class="switch">
-                <input type="checkbox" class="tbl-has-footer" data-si="${si}" data-sj="${sj}" ${
-                    sub.table.footer && sub.table.footer.length ? "checked" : ""
-                  }/>
-                <span>تفعيل صف الفوتر (Footer)</span>
-              </label>
-              <div class="tbl-grid tbl-footer" ${
-                sub.table.footer && sub.table.footer.length
-                  ? ""
-                  : 'style="display:none"'
-              }>
-                ${Array.from({ length: colsCount })
-                  .map(
-                    (_, ci) =>
-                      `<input class="tbl-f" data-si="${si}" data-sj="${sj}" data-ci="${ci}" value="${esc(
-                        sub.table.footer?.[ci] ?? ""
-                      )}" />`
-                  )
-                  .join("")}
-              </div>
-            </div>
-            `
-                : `
-            <div class="action-editor">
-              <button class="btn" data-act="add-table" data-si="${si}" data-sj="${sj}">+ إنشاء جدول</button>
-            </div>
-            `
-            }
-          </div>
-        </details>
-
-        <div class="action-editor">
-          <button class="btn danger" data-act="del-sub" data-si="${si}" data-sj="${sj}">حذف العنوان الفرعي</button>
-        </div>
+      </label>
       `;
-          subsWrap.appendChild(subDiv);
+          subDiv.appendChild(inner);
+
+          // جدول (إذا موجود) ننشئه داخل details منفصل
+          if (hasTable) {
+            const sd = document.createElement("details");
+            // استعادة حالة الفتح للـ subsection
+            const key = `${si}:${sj}`;
+            if (openState.subsections.hasOwnProperty(key)) {
+              sd.open = !!openState.subsections[key];
+            } else {
+              sd.open = hasTable; // افتح إذا يوجد جدول افتراضياً
+            }
+
+            const ssummary = document.createElement("summary");
+            ssummary.textContent = "جدول (اختياري)";
+            sd.appendChild(ssummary);
+
+            const tableEditor = document.createElement("div");
+            tableEditor.className = "table-editor";
+            tableEditor.setAttribute("data-si", si);
+            tableEditor.setAttribute("data-sj", sj);
+
+            // رؤوس الأعمدة
+            const headersDiv = document.createElement("div");
+            headersDiv.className = "tbl-row";
+            headersDiv.innerHTML = `<strong>العناوين (Headers)</strong><div class="tbl-grid tbl-headers"></div><div class="action-editor"><button class="btn" data-act="add-col" data-si="${si}" data-sj="${sj}">+ عمود</button><button class="btn danger" data-act="del-col" data-si="${si}" data-sj="${sj}">حذف آخر عمود</button></div>`;
+            const headersGrid = headersDiv.querySelector(".tbl-headers");
+            (sub.table.headers || []).forEach((h, ci) => {
+              const inp = document.createElement("input");
+              inp.className = "tbl-h";
+              inp.dataset.si = si;
+              inp.dataset.sj = sj;
+              inp.dataset.ci = ci;
+              inp.value = h || "";
+              headersGrid.appendChild(inp);
+            });
+            tableEditor.appendChild(headersDiv);
+
+            // colFormats row
+            const formatsDiv = document.createElement("div");
+            formatsDiv.className = "tbl-row";
+            formatsDiv.innerHTML = `<strong>أنواع الأعمدة (colFormats)</strong><div class="tbl-grid tbl-formats"></div>`;
+            const fmtGrid = formatsDiv.querySelector(".tbl-formats");
+            for (let ci = 0; ci < colsCount; ci++) {
+              const sel = document.createElement("select");
+              sel.className = "tbl-format";
+              sel.dataset.si = si;
+              sel.dataset.sj = sj;
+              sel.dataset.ci = ci;
+              ["text", "number", "currency", "percent"].forEach((val) => {
+                const opt = document.createElement("option");
+                opt.value = val;
+                opt.textContent =
+                  val === "text"
+                    ? "نص"
+                    : val === "number"
+                    ? "Number"
+                    : val === "currency"
+                    ? "Currency"
+                    : "Percent";
+                if (
+                  ((sub.table.colFormats || [])[ci] ||
+                    (ci === 0 ? "text" : "number")) === val
+                )
+                  opt.selected = true;
+                sel.appendChild(opt);
+              });
+              fmtGrid.appendChild(sel);
+            }
+            tableEditor.appendChild(formatsDiv);
+
+            // صفوف الجدول
+            const rowsDiv = document.createElement("div");
+            rowsDiv.className = "tbl-row";
+            rowsDiv.innerHTML = `<strong>الصفوف (Rows)</strong><div class="tbl-rows"></div><div class="action-editor"><button class="btn" data-act="add-row" data-si="${si}" data-sj="${sj}">+ صف</button><button class="btn danger" data-act="del-table" data-si="${si}" data-sj="${sj}">حذف الجدول</button></div>`;
+            const tblRowsContainer = rowsDiv.querySelector(".tbl-rows");
+            (sub.table.rows || []).forEach((row, ri) => {
+              const rowGrid = document.createElement("div");
+              rowGrid.className = "tbl-grid";
+              for (let ci = 0; ci < colsCount; ci++) {
+                const cell = document.createElement("input");
+                cell.className = "tbl-cell";
+                cell.dataset.si = si;
+                cell.dataset.sj = sj;
+                cell.dataset.ri = ri;
+                cell.dataset.ci = ci;
+                cell.value = row?.[ci] ?? "";
+                rowGrid.appendChild(cell);
+              }
+              const delBtn = document.createElement("button");
+              delBtn.className = "btn danger";
+              delBtn.dataset.act = "del-row";
+              delBtn.dataset.si = si;
+              delBtn.dataset.sj = sj;
+              delBtn.dataset.ri = ri;
+              delBtn.textContent = "حذف الصف";
+              rowGrid.appendChild(delBtn);
+              tblRowsContainer.appendChild(rowGrid);
+            });
+            tableEditor.appendChild(rowsDiv);
+
+            // Footer toggle وحقول الفوتر
+            const footerRow = document.createElement("div");
+            footerRow.className = "tbl-row";
+            const chkWrap = document.createElement("label");
+            chkWrap.className = "switch";
+            chkWrap.innerHTML = `<input type="checkbox" class="tbl-has-footer" data-si="${si}" data-sj="${sj}" ${
+              sub.table.footer && sub.table.footer.length ? "checked" : ""
+            }/><span>تفعيل صف الفوتر (Footer)</span>`;
+            footerRow.appendChild(chkWrap);
+
+            const footGrid = document.createElement("div");
+            footGrid.className = "tbl-grid tbl-footer";
+            if (!(sub.table.footer && sub.table.footer.length))
+              footGrid.style.display = "none";
+            for (let ci = 0; ci < colsCount; ci++) {
+              const finp = document.createElement("input");
+              finp.className = "tbl-f";
+              finp.dataset.si = si;
+              finp.dataset.sj = sj;
+              finp.dataset.ci = ci;
+              finp.value = (sub.table.footer && sub.table.footer[ci]) || "";
+              footGrid.appendChild(finp);
+            }
+            tableEditor.appendChild(footerRow);
+            tableEditor.appendChild(footGrid);
+
+            sd.appendChild(tableEditor);
+
+            // عند toggle للـ subsection
+            sd.addEventListener("toggle", () => {
+              setArrow(sd);
+              openState.subsections[`${si}:${sj}`] = !!sd.open;
+            });
+
+            // ضع سهم داخل summary للـ sd
+            const sdArrow = document.createElement("span");
+            sdArrow.className = "arrow";
+            sdArrow.style.marginInlineEnd = "8px";
+            const sdSummary = sd.querySelector("summary");
+            if (sdSummary) {
+              sdSummary.prepend(sdArrow);
+            }
+
+            subDiv.appendChild(sd);
+            // ضف subDiv إلى subsWrap
+            subsWrap.appendChild(subDiv);
+
+            // اضبط السهم مبدئياً
+            setArrow(sd);
+          } else {
+            // لا جدول: ببساطة أدخل محتوى مع زر إضافة جدول
+            const detailsPlaceholder = document.createElement("div");
+            detailsPlaceholder.className = "table-editor";
+            detailsPlaceholder.innerHTML = `<div class="action-editor"><button class="btn" data-act="add-table" data-si="${si}" data-sj="${sj}">+ إنشاء جدول</button></div>`;
+            subDiv.appendChild(detailsPlaceholder);
+            subsWrap.appendChild(subDiv);
+          }
         });
 
         const actions = document.createElement("div");
@@ -407,6 +520,9 @@
         content.appendChild(subsWrap);
         content.appendChild(actions);
         det.appendChild(content);
+
+        // ضع سهم داخل summary للـ section
+        setArrow(det);
         cardWrap.appendChild(det);
         host.appendChild(cardWrap);
       });
@@ -414,6 +530,12 @@
 
     // ===== المهمات (مع سهم دوّار وتدرجات) =====
     function rGoals() {
+      try {
+        captureOpenState();
+      } catch (e) {
+        /* ignore */
+      }
+
       const host = document.getElementById("goalsEditor");
       host.innerHTML = "";
       (data.goals || []).forEach((g, gi) => {
@@ -421,7 +543,11 @@
         cardWrap.className = "editor-card";
 
         const det = document.createElement("details");
-        if (!g.subtitle || (g.items || []).length < 2) det.open = true;
+        if (openState.goals.hasOwnProperty(gi)) {
+          det.open = !!openState.goals[gi];
+        } else {
+          det.open = !g.subtitle || (g.items || []).length < 2;
+        }
 
         const doneCount = (g.items || []).filter((x) => x && x.done).length;
         const total = (g.items || []).length || 0;
@@ -439,6 +565,11 @@
       <span class="summary-right">${doneCount}/${total} — ${pct}%</span>
     `;
         det.appendChild(summ);
+
+        det.addEventListener("toggle", () => {
+          setArrow(det);
+          openState.goals[gi] = !!det.open;
+        });
 
         const content = document.createElement("div");
         content.className = "goal-content";
@@ -482,6 +613,9 @@
         det.appendChild(content);
         cardWrap.appendChild(det);
         host.appendChild(cardWrap);
+
+        // اضبط السهم مبدئياً
+        setArrow(det);
       });
     }
 
