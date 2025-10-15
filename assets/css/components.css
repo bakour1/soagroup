@@ -1,4 +1,5 @@
 /* assets\css\components.css */
+
 /* Progress على لايت */
 .progress {
   height: 10px;
@@ -14,33 +15,18 @@
   transition: width 0.3s ease;
 }
 
-/* عناصر المهمات */
-.goal {
-  padding: 0.35rem 0.5rem;
-  border-radius: 8px;
-  border: 1px dashed color-mix(in oklab, var(--border) 85%, transparent);
-  margin: 0.25rem 0;
-}
-.goal.done {
-  border-style: solid;
-  background: rgba(120, 207, 158, 0.37);
-}
-
-.goal:not(.done) {
-  background-color: rgba(212, 119, 119, 0.267);
-}
-
-.goals-card .goals-list {
-  margin: 0.6rem 0 0;
-  padding-inline-start: 1rem;
-}
-
 /* صف الشريط + العدّاد */
 .progress-row {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-top: 0.25rem;
+}
+
+/* تأكد من أن الشريط يأخذ بقية المساحة */
+.progress-row .progress {
+  flex: 1 1 auto;
+  min-width: 140px;
 }
 
 /* صندوق المعلومات بجانب الشريط */
@@ -67,10 +53,24 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* تأكد من أن الشريط يأخذ بقية المساحة */
-.progress-row .progress {
-  flex: 1 1 auto;
-  min-width: 140px;
+/* عناصر المهمات */
+.goal {
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  border: 1px dashed color-mix(in oklab, var(--border) 85%, transparent);
+  margin: 0.25rem 0;
+}
+.goal.done {
+  border-style: solid;
+  background: rgba(120, 207, 158, 0.37);
+}
+.goal:not(.done) {
+  background-color: rgba(212, 119, 119, 0.267);
+}
+
+.goals-card .goals-list {
+  margin: 0.6rem 0 0;
+  padding-inline-start: 1rem;
 }
 
 /* زر التحرير العائم */
@@ -103,10 +103,132 @@
   z-index: 1000;
   box-shadow: -12px 0 32px rgba(2, 12, 27, 0.08);
 }
+
 /* hide scroll bar for admin panel */
 .admin-panel::-webkit-scrollbar {
   /* display: none; */
 }
+
+/* ===== تفاصيل/سمراري مخصّصة للوحة الإدارة ===== */
+.admin-panel details.editor-card details {
+  margin: 6px 0;
+  border-radius: 10px;
+  padding: 8px;
+  background: linear-gradient(
+    180deg,
+    rgba(250, 250, 250, 0.9),
+    rgba(245, 247, 250, 0.98)
+  );
+  box-shadow: 0 6px 18px rgba(10, 20, 30, 0.04);
+  border: 1px solid rgba(10, 20, 30, 0.04);
+}
+
+/* summary الرئيسي */
+.admin-panel summary.sec-summary,
+.admin-panel summary.goal-summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  border-radius: 8px;
+  transition: background 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+  background: linear-gradient(
+    90deg,
+    rgba(14, 138, 160, 0.06),
+    rgba(14, 138, 160, 0.02)
+  );
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+/* محتوى اليسار داخل summary (سهم + نص) */
+.admin-panel .sec-summary .summary-left,
+.admin-panel .goal-summary .summary-left {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  direction: rtl;
+}
+
+/* سهم صغير دوّار */
+.admin-panel .arrow {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  line-height: 18px;
+  text-align: center;
+  border-radius: 6px;
+  transition: transform 260ms cubic-bezier(0.2, 0.9, 0.2, 1), background 260ms;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.6),
+    rgba(250, 250, 250, 0.4)
+  );
+  color: rgba(6, 22, 50, 0.9);
+  font-weight: 800;
+  transform: rotate(0deg);
+}
+
+/* عند الفتح، دوران السهم 90 درجة (لـ RTL يظهر بشكل منطقي) */
+.admin-panel details[open] .arrow {
+  transform: rotate(90deg);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.78),
+    rgba(245, 245, 255, 0.6)
+  );
+  box-shadow: 0 4px 12px rgba(10, 20, 30, 0.05);
+}
+
+/* تأثير لامع على hover */
+.admin-panel summary.sec-summary:hover,
+.admin-panel summary.goal-summary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(12, 60, 90, 0.06);
+}
+
+/* نص العنوان داخل summary */
+.admin-panel .sec-title-text,
+.admin-panel .goal-summary-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* الجانب اليميني داخل summary (معلومات سريعة) */
+.admin-panel .summary-right {
+  opacity: 0.88;
+  font-variant-numeric: tabular-nums;
+  color: rgba(6, 22, 50, 0.8);
+}
+
+/* إحاطة المحتوى الداخلي داخل details */
+.admin-panel .sec-content,
+.admin-panel .goal-content {
+  padding: 10px 6px 6px 6px;
+  border-radius: 8px;
+  margin-top: 6px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8),
+    rgba(250, 250, 250, 0.7)
+  );
+  border: 1px solid rgba(10, 20, 30, 0.02);
+}
+
+/* تحسين استجابة الموبايل */
+@media (max-width: 760px) {
+  .admin-panel .tbl-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+  .admin-panel .summary-right {
+    font-size: 0.9rem;
+  }
+}
+
 .admin-header {
   display: flex;
   gap: 8px;
@@ -120,6 +242,7 @@
   background: #fff;
   z-index: 1000;
 }
+
 .admin-body details {
   margin: 12px 0;
   border: 1px solid var(--border);
@@ -127,67 +250,69 @@
   padding: 10px;
   background: #fff;
   box-shadow: 0 8px 24px rgba(14, 138, 160, 0.12);
-
-  summary {
-    cursor: pointer;
-    font-weight: 600;
-    outline: none;
-    padding: 10px;
-    background-color: var(--brand);
-    color: var(--accent);
-    border-radius: 10px;
-  }
 }
+
+.admin-body details summary {
+  cursor: pointer;
+  font-weight: 600;
+  outline: none;
+  padding: 10px;
+  background-color: var(--brand);
+  color: var(--accent);
+  border-radius: 10px;
+}
+
 .admin-body {
-  label {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    font-weight: 600;
-
-    &:not(:first-child) {
-      margin: 20px 0;
-    }
-  }
-  input,
-  textarea,
-  select {
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px;
-    font-size: 1rem;
-    font-family: inherit;
-    background: var(--border);
-    color: var(--text);
-    max-width: 100%;
-  }
-  .sub-editor:not(:first-child) {
-    padding-bottom: 20px;
-    margin-top: 20px;
-    border-top: 1px solid var(--border);
-  }
-  .action-editor {
-    display: flex;
-    gap: 8px;
-    margin-block: 12px;
-  }
-  #addSection {
-    margin-block: 10px;
-  }
-  .item-editor {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-  .goal-done {
-    width: 22px;
-    height: 22px;
-    border: 1px solid var(--border);
-  }
-  #addGoalGroup {
-    margin-top: 10px;
-  }
+  /* تنسيقات عامة لداخل لوحة الإدارة */
 }
+.admin-body label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: 600;
+}
+.admin-body label:not(:first-child) {
+  margin: 20px 0;
+}
+.admin-body input,
+.admin-body textarea,
+.admin-body select {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: var(--border);
+  color: var(--text);
+  max-width: 100%;
+}
+.admin-body .sub-editor:not(:first-child) {
+  padding-bottom: 20px;
+  margin-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.admin-body .action-editor {
+  display: flex;
+  gap: 8px;
+  margin-block: 12px;
+}
+.admin-body #addSection {
+  margin-block: 10px;
+}
+.admin-body .item-editor {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.admin-body .goal-done {
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--border);
+}
+.admin-body #addGoalGroup {
+  margin-top: 10px;
+}
+
 .table-editor {
   display: grid;
   gap: 10px;
@@ -196,6 +321,7 @@
   display: grid;
   gap: 8px;
 }
+
 .tbl-grid {
   display: grid;
   gap: 6px;
@@ -216,11 +342,13 @@
   margin: 8px 0;
   background: #fff;
 }
+
 .switch {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
+
 .login-wrap {
   min-height: 100%;
   display: grid;
@@ -233,6 +361,7 @@
 .login-card {
   width: min(520px, 92vw);
 }
+
 @media (max-width: 560px) {
   .login-wrap {
     background-color: #fff;
@@ -248,6 +377,7 @@
     text-align: center !important;
   }
 }
+
 /* بطاقات الأهداف والقوائم على الموبايل */
 @media (max-width: 768px) {
   .goals-card .goals-list li {

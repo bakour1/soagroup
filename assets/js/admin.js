@@ -224,29 +224,40 @@
       data.landing?.subtitle || "";
     document.getElementById("landBody").value = data.landing?.body || "";
 
-    // ===== الأقسام =====
+    // ===== الأقسام (مع سهم دوّار وتدرجات) =====
     function rSec() {
       const host = document.getElementById("sectionsEditor");
       host.innerHTML = "";
       (data.sections || []).forEach((s, si) => {
-        const card = document.createElement("div");
-        card.className = "editor-card";
-        const subs = s.subsections || [];
-        card.innerHTML = `
-          <label>عنوان القسم
-            <input data-si="${si}" class="sec-title" value="${esc(
-          s.title || ""
-        )}"/>
-          </label>
-          <div class="subs"></div>
-          <div class="action-editor">
-            <button class="btn" data-act="add-sub" data-si="${si}">+ إضافة عنوان فرعي</button>
-            <button class="btn danger" data-act="del-sec" data-si="${si}">حذف القسم</button>
-          </div>
-        `;
-        const subsWrap = card.querySelector(".subs");
+        const cardWrap = document.createElement("div");
+        cardWrap.className = "editor-card";
 
-        subs.forEach((sub, sj) => {
+        const det = document.createElement("details");
+        if (!s.title || (s.subsections || []).length === 0) det.open = true;
+
+        // summary مع سهم (span.arrow) + عنوان
+        const summ = document.createElement("summary");
+        summ.className = "sec-summary";
+        summ.innerHTML = `<span class="summary-left">
+                         <span class="arrow" aria-hidden="true">▸</span>
+                         <span class="sec-title-text">${esc(
+                           s.title || "قسم " + (si + 1)
+                         )}</span>
+                       </span>
+                       <span class="summary-right">قسم ${si + 1}</span>`;
+        det.appendChild(summ);
+
+        const content = document.createElement("div");
+        content.className = "sec-content";
+
+        const titleLabel = document.createElement("label");
+        titleLabel.innerHTML = `عنوان القسم
+      <input data-si="${si}" class="sec-title" value="${esc(s.title || "")}"/>`;
+        content.appendChild(titleLabel);
+
+        const subsWrap = document.createElement("div");
+        subsWrap.className = "subs";
+        (s.subsections || []).forEach((sub, sj) => {
           const hasTable = sub.table && Array.isArray(sub.table.headers);
           const textsStr = (sub.texts || []).join("\n");
           const colsCount = hasTable ? (sub.table.headers || []).length : 0;
@@ -254,185 +265,223 @@
           const subDiv = document.createElement("div");
           subDiv.className = "sub-editor";
           subDiv.innerHTML = `
-            <label>عنوان فرعي
-              <input data-si="${si}" data-sj="${sj}" class="sub-title" value="${esc(
+        <label>عنوان فرعي
+          <input data-si="${si}" data-sj="${sj}" class="sub-title" value="${esc(
             sub.subtitle || ""
           )}"/>
-            </label>
+        </label>
 
-            <label>النصوص (كل سطر نص)
-              <textarea rows="4" data-si="${si}" data-sj="${sj}" class="sub-texts">${esc(
+        <label>النصوص (كل سطر نص)
+          <textarea rows="4" data-si="${si}" data-sj="${sj}" class="sub-texts">${esc(
             textsStr
           )}</textarea>
-            </label>
+        </label>
 
-            <details ${hasTable ? "open" : ""}>
-              <summary>جدول (اختياري)</summary>
-              <div class="table-editor" data-si="${si}" data-sj="${sj}">
-                ${
-                  hasTable
-                    ? `
-                  <div class="tbl-row">
-                    <strong>العناوين (Headers)</strong>
-                    <div class="tbl-grid tbl-headers">
-                      ${(sub.table.headers || [])
-                        .map(
-                          (h, ci) =>
-                            `<input class="tbl-h" data-si="${si}" data-sj="${sj}" data-ci="${ci}" value="${esc(
-                              h
-                            )}" />`
-                        )
-                        .join("")}
-                    </div>
-                    <div class="action-editor">
-                      <button class="btn" data-act="add-col" data-si="${si}" data-sj="${sj}">+ عمود</button>
-                      <button class="btn danger" data-act="del-col" data-si="${si}" data-sj="${sj}">حذف آخر عمود</button>
-                    </div>
-                  </div>
+        <details ${hasTable ? "open" : ""}>
+          <summary>جدول (اختياري)</summary>
+          <div class="table-editor" data-si="${si}" data-sj="${sj}">
+            ${
+              hasTable
+                ? `
+            <div class="tbl-row">
+              <strong>العناوين (Headers)</strong>
+              <div class="tbl-grid tbl-headers">
+                ${(sub.table.headers || [])
+                  .map(
+                    (h, ci) =>
+                      `<input class="tbl-h" data-si="${si}" data-sj="${sj}" data-ci="${ci}" value="${esc(
+                        h
+                      )}" />`
+                  )
+                  .join("")}
+              </div>
+              <div class="action-editor">
+                <button class="btn" data-act="add-col" data-si="${si}" data-sj="${sj}">+ عمود</button>
+                <button class="btn danger" data-act="del-col" data-si="${si}" data-sj="${sj}">حذف آخر عمود</button>
+              </div>
+            </div>
 
-                  <div class="tbl-row">
-                    <strong>أنواع الأعمدة (colFormats)</strong>
-                    <div class="tbl-grid tbl-formats">
-                      ${Array.from({ length: colsCount })
-                        .map((_, ci) => {
-                          const fmt =
-                            (sub.table.colFormats &&
-                              sub.table.colFormats[ci]) ||
-                            (ci === 0 ? "text" : "number");
-                          return `
-                            <select class="tbl-format"
-                                    data-si="${si}" data-sj="${sj}" data-ci="${ci}">
-                              <option value="text"     ${
-                                fmt === "text" ? "selected" : ""
-                              }>نص</option>
-                              <option value="number"   ${
-                                fmt === "number" ? "selected" : ""
-                              }>Number</option>
-                              <option value="currency" ${
-                                fmt === "currency" ? "selected" : ""
-                              }>Currency</option>
-                              <option value="percent"  ${
-                                fmt === "percent" ? "selected" : ""
-                              }>Percent</option>
-                            </select>
-                          `;
-                        })
-                        .join("")}
-                    </div>
-                  </div>
+            <div class="tbl-row">
+              <strong>أنواع الأعمدة (colFormats)</strong>
+              <div class="tbl-grid tbl-formats">
+                ${Array.from({ length: colsCount })
+                  .map((_, ci) => {
+                    const fmt =
+                      (sub.table.colFormats && sub.table.colFormats[ci]) ||
+                      (ci === 0 ? "text" : "number");
+                    return `
+                      <select class="tbl-format"
+                              data-si="${si}" data-sj="${sj}" data-ci="${ci}">
+                        <option value="text"     ${
+                          fmt === "text" ? "selected" : ""
+                        }>نص</option>
+                        <option value="number"   ${
+                          fmt === "number" ? "selected" : ""
+                        }>Number</option>
+                        <option value="currency" ${
+                          fmt === "currency" ? "selected" : ""
+                        }>Currency</option>
+                        <option value="percent"  ${
+                          fmt === "percent" ? "selected" : ""
+                        }>Percent</option>
+                      </select>
+                    `;
+                  })
+                  .join("")}
+              </div>
+            </div>
 
-                  <div class="tbl-row">
-                    <strong>الصفوف (Rows)</strong>
-                    <div class="tbl-rows" data-si="${si}" data-sj="${sj}">
-                      ${(sub.table.rows || [])
-                        .map(
-                          (row, ri) => `
-                          <div class="tbl-grid">
-                            ${Array.from({ length: colsCount })
-                              .map(
-                                (_, ci) =>
-                                  `<input class="tbl-cell" data-si="${si}" data-sj="${sj}" data-ri="${ri}" data-ci="${ci}" value="${esc(
-                                    row?.[ci] ?? ""
-                                  )}" />`
-                              )
-                              .join("")}
-                            <button class="btn danger" data-act="del-row" data-si="${si}" data-sj="${sj}" data-ri="${ri}">حذف الصف</button>
-                          </div>
-                        `
-                        )
-                        .join("")}
-                    </div>
-                    <div class="action-editor">
-                      <button class="btn" data-act="add-row" data-si="${si}" data-sj="${sj}">+ صف</button>
-                      <button class="btn danger" data-act="del-table" data-si="${si}" data-sj="${sj}">حذف الجدول</button>
-                    </div>
-                  </div>
-
-                  <div class="tbl-row">
-                    <label class="switch">
-                      <input type="checkbox" class="tbl-has-footer" data-si="${si}" data-sj="${sj}" ${
-                        sub.table.footer && sub.table.footer.length
-                          ? "checked"
-                          : ""
-                      }/>
-                      <span>تفعيل صف الفوتر (Footer)</span>
-                    </label>
-                    <div class="tbl-grid tbl-footer" ${
-                      sub.table.footer && sub.table.footer.length
-                        ? ""
-                        : 'style="display:none"'
-                    }>
+            <div class="tbl-row">
+              <strong>الصفوف (Rows)</strong>
+              <div class="tbl-rows" data-si="${si}" data-sj="${sj}">
+                ${(sub.table.rows || [])
+                  .map(
+                    (row, ri) => `
+                    <div class="tbl-grid">
                       ${Array.from({ length: colsCount })
                         .map(
                           (_, ci) =>
-                            `<input class="tbl-f" data-si="${si}" data-sj="${sj}" data-ci="${ci}" value="${esc(
-                              sub.table.footer?.[ci] ?? ""
+                            `<input class="tbl-cell" data-si="${si}" data-sj="${sj}" data-ri="${ri}" data-ci="${ci}" value="${esc(
+                              row?.[ci] ?? ""
                             )}" />`
                         )
                         .join("")}
+                      <button class="btn danger" data-act="del-row" data-si="${si}" data-sj="${sj}" data-ri="${ri}">حذف الصف</button>
                     </div>
-                  </div>
                   `
-                    : `
-                  <div class="action-editor">
-                    <button class="btn" data-act="add-table" data-si="${si}" data-sj="${sj}">+ إنشاء جدول</button>
-                  </div>
-                  `
-                }
+                  )
+                  .join("")}
               </div>
-            </details>
-
-            <div class="action-editor">
-              <button class="btn danger" data-act="del-sub" data-si="${si}" data-sj="${sj}">حذف العنوان الفرعي</button>
+              <div class="action-editor">
+                <button class="btn" data-act="add-row" data-si="${si}" data-sj="${sj}">+ صف</button>
+                <button class="btn danger" data-act="del-table" data-si="${si}" data-sj="${sj}">حذف الجدول</button>
+              </div>
             </div>
-          `;
+
+            <div class="tbl-row">
+              <label class="switch">
+                <input type="checkbox" class="tbl-has-footer" data-si="${si}" data-sj="${sj}" ${
+                    sub.table.footer && sub.table.footer.length ? "checked" : ""
+                  }/>
+                <span>تفعيل صف الفوتر (Footer)</span>
+              </label>
+              <div class="tbl-grid tbl-footer" ${
+                sub.table.footer && sub.table.footer.length
+                  ? ""
+                  : 'style="display:none"'
+              }>
+                ${Array.from({ length: colsCount })
+                  .map(
+                    (_, ci) =>
+                      `<input class="tbl-f" data-si="${si}" data-sj="${sj}" data-ci="${ci}" value="${esc(
+                        sub.table.footer?.[ci] ?? ""
+                      )}" />`
+                  )
+                  .join("")}
+              </div>
+            </div>
+            `
+                : `
+            <div class="action-editor">
+              <button class="btn" data-act="add-table" data-si="${si}" data-sj="${sj}">+ إنشاء جدول</button>
+            </div>
+            `
+            }
+          </div>
+        </details>
+
+        <div class="action-editor">
+          <button class="btn danger" data-act="del-sub" data-si="${si}" data-sj="${sj}">حذف العنوان الفرعي</button>
+        </div>
+      `;
           subsWrap.appendChild(subDiv);
         });
 
-        host.appendChild(card);
+        const actions = document.createElement("div");
+        actions.className = "action-editor";
+        actions.innerHTML = `
+      <button class="btn" data-act="add-sub" data-si="${si}">+ إضافة عنوان فرعي</button>
+      <button class="btn danger" data-act="del-sec" data-si="${si}">حذف القسم</button>
+    `;
+
+        content.appendChild(subsWrap);
+        content.appendChild(actions);
+        det.appendChild(content);
+        cardWrap.appendChild(det);
+        host.appendChild(cardWrap);
       });
     }
 
-    // ===== المهمات =====
+    // ===== المهمات (مع سهم دوّار وتدرجات) =====
     function rGoals() {
       const host = document.getElementById("goalsEditor");
       host.innerHTML = "";
       (data.goals || []).forEach((g, gi) => {
-        const card = document.createElement("div");
-        card.className = "editor-card";
-        const items = g.items || [];
-        card.innerHTML = `
-          <label>عنوان فقرة المهمات
-            <textarea data-gi="${gi}" class="goal-subtitle" rows="2">${esc(
+        const cardWrap = document.createElement("div");
+        cardWrap.className = "editor-card";
+
+        const det = document.createElement("details");
+        if (!g.subtitle || (g.items || []).length < 2) det.open = true;
+
+        const doneCount = (g.items || []).filter((x) => x && x.done).length;
+        const total = (g.items || []).length || 0;
+        const pct = total ? Math.round((doneCount / total) * 100) : 0;
+
+        const summ = document.createElement("summary");
+        summ.className = "goal-summary";
+        summ.innerHTML = `
+      <span class="summary-left">
+        <span class="arrow" aria-hidden="true">▸</span>
+        <span class="goal-summary-title">${esc(
+          g.subtitle || "فقرة مهمات " + (gi + 1)
+        )}</span>
+      </span>
+      <span class="summary-right">${doneCount}/${total} — ${pct}%</span>
+    `;
+        det.appendChild(summ);
+
+        const content = document.createElement("div");
+        content.className = "goal-content";
+
+        const titleLabel = document.createElement("label");
+        titleLabel.innerHTML = `عنوان فقرة المهمات
+      <textarea data-gi="${gi}" class="goal-subtitle" rows="2">${esc(
           g.subtitle || ""
-        )}</textarea>
+        )}</textarea>`;
+        content.appendChild(titleLabel);
+
+        const itemsDiv = document.createElement("div");
+        itemsDiv.className = "items";
+        (g.items || []).forEach((it, ii) => {
+          const itemHtml = `
+        <div class="item-editor">
+          <input type="text" class="goal-title" data-gi="${gi}" data-ii="${ii}" value="${esc(
+            it.title || ""
+          )}" placeholder="عنوان الهدف"/>
+          <label class="switch">
+            <input type="checkbox" class="goal-done" data-gi="${gi}" data-ii="${ii}" ${
+            it.done ? "checked" : ""
+          }/>
+            <span>منجز</span>
           </label>
-          <div class="items">
-            ${items
-              .map(
-                (it, ii) => `
-              <div class="item-editor">
-                <input type="text" class="goal-title" data-gi="${gi}" data-ii="${ii}" value="${esc(
-                  it.title || ""
-                )}" placeholder="عنوان الهدف"/>
-                <label class="switch">
-                  <input type="checkbox" class="goal-done" data-gi="${gi}" data-ii="${ii}" ${
-                  it.done ? "checked" : ""
-                }/>
-                  <span>منجز</span>
-                </label>
-                <button class="btn danger" data-act="del-item" data-gi="${gi}" data-ii="${ii}">حذف</button>
-              </div>
-            `
-              )
-              .join("")}
-          </div>
-          <div class="action-editor">
-            <button class="btn" data-act="add-item" data-gi="${gi}">+ إضافة هدف</button>
-            <button class="btn danger" data-act="del-group" data-gi="${gi}">حذف فقرة المهمات</button>
-          </div>
-        `;
-        host.appendChild(card);
+          <button class="btn danger" data-act="del-item" data-gi="${gi}" data-ii="${ii}">حذف</button>
+        </div>
+      `;
+          itemsDiv.insertAdjacentHTML("beforeend", itemHtml);
+        });
+        content.appendChild(itemsDiv);
+
+        const actions = document.createElement("div");
+        actions.className = "action-editor";
+        actions.innerHTML = `
+      <button class="btn" data-act="add-item" data-gi="${gi}">+ إضافة هدف</button>
+      <button class="btn danger" data-act="del-group" data-gi="${gi}">حذف فقرة المهمات</button>
+    `;
+        content.appendChild(actions);
+
+        det.appendChild(content);
+        cardWrap.appendChild(det);
+        host.appendChild(cardWrap);
       });
     }
 
