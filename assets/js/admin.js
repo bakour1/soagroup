@@ -291,6 +291,37 @@
                   </div>
 
                   <div class="tbl-row">
+                    <strong>أنواع الأعمدة (colFormats)</strong>
+                    <div class="tbl-grid tbl-formats">
+                      ${Array.from({ length: colsCount })
+                        .map((_, ci) => {
+                          const fmt =
+                            (sub.table.colFormats &&
+                              sub.table.colFormats[ci]) ||
+                            (ci === 0 ? "text" : "number");
+                          return `
+                            <select class="tbl-format"
+                                    data-si="${si}" data-sj="${sj}" data-ci="${ci}">
+                              <option value="text"     ${
+                                fmt === "text" ? "selected" : ""
+                              }>نص</option>
+                              <option value="number"   ${
+                                fmt === "number" ? "selected" : ""
+                              }>Number</option>
+                              <option value="currency" ${
+                                fmt === "currency" ? "selected" : ""
+                              }>Currency</option>
+                              <option value="percent"  ${
+                                fmt === "percent" ? "selected" : ""
+                              }>Percent</option>
+                            </select>
+                          `;
+                        })
+                        .join("")}
+                    </div>
+                  </div>
+
+                  <div class="tbl-row">
                     <strong>الصفوف (Rows)</strong>
                     <div class="tbl-rows" data-si="${si}" data-sj="${sj}">
                       ${(sub.table.rows || [])
@@ -466,6 +497,21 @@
         const sub = data.sections[si].subsections[sj];
         sub.table.footer[ci] = t.value;
       }
+      if (t.classList.contains("tbl-format")) {
+        const si = +t.dataset.si,
+          sj = +t.dataset.sj,
+          ci = +t.dataset.ci;
+        const sub = data.sections[si].subsections[sj];
+        const cols = sub.table.headers.length;
+        // جهّز المصفوفة بطول الأعمدة
+        sub.table.colFormats = Array.from(
+          { length: cols },
+          (_, i) =>
+            (sub.table.colFormats && sub.table.colFormats[i]) ||
+            (i === 0 ? "text" : "number")
+        );
+        sub.table.colFormats[ci] = t.value; // set
+      }
     });
 
     // ===== الأزرار =====
@@ -503,6 +549,7 @@
           headers: ["Column 1", "Column 2", "Column 3"],
           rows: [],
           footer: [],
+          colFormats: ["text", "number", "number"],
         };
         rSec();
       }
@@ -519,6 +566,12 @@
         sub.table.headers.push("");
         (sub.table.rows || []).forEach((r) => r.push(""));
         if (sub.table.footer) sub.table.footer.push("");
+        sub.table.colFormats = Array.from(
+          { length: sub.table.headers.length },
+          (_, i) =>
+            (sub.table.colFormats && sub.table.colFormats[i]) ||
+            (i === 0 ? "text" : "number")
+        );
         rSec();
       }
       if (a === "del-col") {
@@ -528,6 +581,12 @@
         if (sub.table.headers.length) sub.table.headers.pop();
         (sub.table.rows || []).forEach((r) => r.pop());
         if (sub.table.footer && sub.table.footer.length) sub.table.footer.pop();
+        if (
+          Array.isArray(sub.table.colFormats) &&
+          sub.table.colFormats.length
+        ) {
+          sub.table.colFormats.pop();
+        }
         rSec();
       }
       if (a === "add-row") {

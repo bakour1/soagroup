@@ -144,11 +144,16 @@
         return "currency";
       return "number";
     };
-    const colTypes =
-      Array.isArray(tbl.colFormats) &&
-      tbl.colFormats.length === tbl.headers.length
-        ? tbl.colFormats
-        : tbl.headers.map(inferType);
+    let colTypes;
+    if (Array.isArray(tbl.colFormats) && tbl.colFormats.length) {
+      const inferred = tbl.headers.map(inferType);
+      // طبّق ما توفر من colFormats ثم أكمل بالاستدلال
+      colTypes = tbl.headers
+        .map((_, i) => tbl.colFormats[i] || inferred[i])
+        .slice(0, tbl.headers.length);
+    } else {
+      colTypes = tbl.headers.map(inferType);
+    }
 
     const table = document.createElement("table");
     table.className = "table soatable";
@@ -204,7 +209,11 @@
     });
     table.appendChild(tbody);
 
-    if (Array.isArray(tbl.footer)) {
+    const hasFooter =
+      Array.isArray(tbl.footer) &&
+      tbl.footer.length > 0 &&
+      tbl.footer.some((v) => String(v ?? "").trim() !== "");
+    if (hasFooter) {
       const tfoot = document.createElement("tfoot");
       const trf = document.createElement("tr");
       const f0 = document.createElement("td");
