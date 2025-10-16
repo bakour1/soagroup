@@ -114,8 +114,11 @@
   display: grid;
   gap: 6px;
 }
-.goal-title {
+h2.goals-title {
   margin-bottom: -10px;
+  background-color: var(--brand-4);
+  color: #fff;
+  padding: 5px 10px;
 }
 .sub h4 {
   margin: 10px 0 !important;

@@ -299,7 +299,7 @@
   function renderGoals(root, arr) {
     if (!Array.isArray(arr)) return;
     const wrap = el("section", "goals");
-    const maintitleSection = "الأهداف: ";
+    const maintitleSection = "# الأهداف: ";
     const mh = el("h2", "goals-title");
     mh.textContent = maintitleSection;
     arr.forEach((g) => {
