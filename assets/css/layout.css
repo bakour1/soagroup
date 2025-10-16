@@ -114,6 +114,9 @@
   display: grid;
   gap: 6px;
 }
+.goal-title {
+  margin-bottom: -10px;
+}
 .sub h4 {
   margin: 10px 0 !important;
   font-size: 18px;

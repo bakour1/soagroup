@@ -299,6 +299,9 @@
   function renderGoals(root, arr) {
     if (!Array.isArray(arr)) return;
     const wrap = el("section", "goals");
+    const maintitleSection = "الأهداف: ";
+    const mh = el("h2", "goals-title");
+    mh.textContent = maintitleSection;
     arr.forEach((g) => {
       const card = el("article", "card goals-card");
       const h = el("h3", "card-title");
@@ -333,6 +336,7 @@
       card.appendChild(ul);
       wrap.appendChild(card);
     });
+    root.appendChild(mh);
     root.appendChild(wrap);
   }
 
