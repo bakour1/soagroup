@@ -2,17 +2,15 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>مخطط غرس الزيتون 20 دونم</title>
+<title>دراسة جدوى وبستان الزيتون 20 دونم</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-  }
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  h1, h2 { text-align: center; }
   .field {
     position: relative;
-    width: 1000px; /* عرض الأرض */
-    background-color: #e0e0e0;
+    width: 1000px; 
     margin: 20px auto;
+    background-color: #e0e0e0;
     border: 2px solid #333;
   }
   .tree {
@@ -21,54 +19,92 @@
     border-radius: 50%;
     position: absolute;
   }
-  .khalkhali { background-color: green; }
-  .qaisi { background-color: yellow; }
+  .main { background-color: green; }
+  .pollinator { background-color: red; }
+  table { width: 90%; margin: 20px auto; border-collapse: collapse; }
+  th, td { border: 1px solid #333; padding: 5px; text-align: center; }
 </style>
 </head>
 <body>
-<h2>مخطط غرس الزيتون - 20 دونم</h2>
-<p>كل نقطة تمثل شجرة، اللون حسب الصنف</p>
+
+<h1>دراسة جدوى وبستان الزيتون - 20 دونم</h1>
+
+<h2>مخطط الغراس</h2>
+<p>الأخضر: الخلخالي (70%) - الأحمر: ملقحات (30%)</p>
 <div class="field" id="field"></div>
 
 <script>
 const field = document.getElementById('field');
 
 // إعدادات الأرض
-const totalDunum = 20; // دونم
-const dunum_m2 = 1000; // 1 دونم = 1000 م² تقريباً
-const total_area = totalDunum * dunum_m2; // 20000 م²
-const field_width_m = 100; // العرض
-const tree_spacing_x = 5; // المسافة بين الأشجار بالعرض
-const tree_spacing_y = 6; // المسافة بين الصفوف
-
-// تحويل المتر إلى بكسل (تقديري)
-const px_per_m = 10; // 1 متر = 10px
-const field_width_px = field_width_m * px_per_m;
-field.style.width = field_width_px + 'px';
+const total_dunum = 20;
+const dunum_m2 = 1000;
+const total_area = total_dunum * dunum_m2;
+const field_width_m = 100;
 const field_height_m = total_area / field_width_m;
+const tree_spacing_x = 5;
+const tree_spacing_y = 6;
+
+// تحويل متر لبكسل
+const px_per_m = 10;
+const field_width_px = field_width_m * px_per_m;
 const field_height_px = field_height_m * px_per_m;
+field.style.width = field_width_px + 'px';
 field.style.height = field_height_px + 'px';
 
-// حساب عدد الصفوف وعدد الأشجار في كل صف
+// عدد الأشجار
 const num_rows = Math.floor(field_height_m / tree_spacing_y);
 const trees_per_row = Math.floor(field_width_m / tree_spacing_x);
 
-// توليد الأشجار
+let tree_count = 0;
+const total_trees = num_rows * trees_per_row;
+const pollinator_count = Math.floor(total_trees * 0.3);
+
 for (let row = 0; row < num_rows; row++) {
   for (let col = 0; col < trees_per_row; col++) {
     const tree = document.createElement('div');
     tree.classList.add('tree');
-    // توزيع الأصناف (مثال: صفوف بديل بين الخلخالي والقيسي)
-    if (row % 2 === 0) {
-      tree.classList.add('khalkhali');
+    // تحديد إذا كانت ملقحة أم رئيسية
+    if (tree_count < pollinator_count) {
+      tree.classList.add('pollinator');
     } else {
-      tree.classList.add('qaisi');
+      tree.classList.add('main');
     }
     tree.style.left = (col * tree_spacing_x * px_per_m) + 'px';
     tree.style.top = (row * tree_spacing_y * px_per_m) + 'px';
     field.appendChild(tree);
+    tree_count++;
   }
 }
 </script>
+
+<h2>دراسة جدوى مختصرة للبستان</h2>
+
+<table>
+<tr><th>البند</th><th>القيمة</th></tr>
+<tr><td>مساحة الأرض</td><td>20 دونم</td></tr>
+<tr><td>عدد الأشجار الكلي</td><td>≈2380 شجرة</td></tr>
+<tr><td>أشجار رئيسية (70%)</td><td>≈1666 شجرة</td></tr>
+<tr><td>أشجار ملقحة (30%)</td><td>≈714 شجرة</td></tr>
+<tr><td>مسافة الغرس</td><td>5×6 متر</td></tr>
+<tr><td>الإنتاج المتوقع بعد النضج الكامل (سنوات 4–20)</td><td>≈1.8 – 2.5 طن زيت/هكتار</td></tr>
+<tr><td>إجمالي الإنتاج للبستان</td><td>≈36 – 50 طن زيت</td></tr>
+<tr><td>سعر التنكة (20 لتر)</td><td>80 دولار</td></tr>
+<tr><td>الإيراد المتوقع</td><td>≈144,000 – 200,000 دولار</td></tr>
+<tr><td>تكلفة التأسيس</td><td>≈80,000 دولار</td></tr>
+<tr><td>تكاليف التشغيل السنوية</td><td>≈1,500 – 2,000 دولار/سنة</td></tr>
+<tr><td>صافي الربح المتوقع خلال 20 سنة</td><td>≈60,000 – 100,000 دولار</td></tr>
+</table>
+
+<h2>نصائح ميدانية</h2>
+<ul>
+<li>اعتمد نظام ري بالتنقيط، مع مراقبة الرطوبة والملوحة.</li>
+<li>ابدأ بتقليم أشجار السنة الأولى لتكوين هيكل قوي.</li>
+<li>توزيع الملقحات 30% من مجموع الأشجار لزيادة عقد الثمار.</li>
+<li>ابدأ الحصاد عند تلون 30–40% من الثمار للحفاظ على جودة الزيت.</li>
+<li>قم بتعبئة الزيت ضمن عبوات مظللة وباردة للحفاظ على الجودة.</li>
+<li>فكر في تسويق محلي مباشر أو عبوات صغيرة بأسعار أعلى لتعظيم الربح.</li>
+</ul>
+
 </body>
 </html>
