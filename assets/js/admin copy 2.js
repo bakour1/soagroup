@@ -1,3 +1,4 @@
+// assets/js/admin.js
 (function () {
   const admin = document.documentElement.getAttribute("data-role") === "admin";
 
@@ -28,6 +29,7 @@
   }
 
   // ====== محوّل ↔ Firestore ======
+  // يحوّل rows: Array<Array>  --> Array<Map> { c0:..., c1:... } (مناسب لـ Firestore)
   function rowsArrayToMaps(rowArr) {
     if (!Array.isArray(rowArr)) return rowArr;
     return rowArr.map((r) => {
@@ -37,6 +39,7 @@
       return o;
     });
   }
+  // عكس السابق: Array<Map> --> Array<Array> بالترتيب c0,c1,c2... (مناسب للمحرر)
   function rowsMapsToArray(rowMaps, colCount) {
     if (!Array.isArray(rowMaps)) return rowMaps;
     return rowMaps.map((r) => {
@@ -49,6 +52,7 @@
       return out;
     });
   }
+  // يمشي على الشجرة ويحوّل كل الجداول إلى Arrays للعرض داخل المحرر
   function normalizeFromCloud(data) {
     const clone = JSON.parse(JSON.stringify(data || {}));
     (clone.sections || []).forEach((sec) => {
@@ -60,6 +64,7 @@
             sub.table.rows.length &&
             !Array.isArray(sub.table.rows[0])
           ) {
+            // rows محفوظة كـ Maps -> رجّعها Arrays للواجهة
             sub.table.rows = rowsMapsToArray(sub.table.rows, cols);
           }
         }
@@ -73,8 +78,10 @@
       (sec.subsections || []).forEach((sub) => {
         if (sub && sub.table && Array.isArray(sub.table.headers)) {
           if (Array.isArray(sub.table.rows)) {
+            // حوّل المصفوفات المتداخلة لمابات لتجنّب nested arrays في Firestore
             sub.table.rows = rowsArrayToMaps(sub.table.rows);
           }
+          // headers و footer تبقى Arrays (لا مشكلة)
         }
       });
     });
@@ -90,7 +97,9 @@
     if (s) s.textContent = txt || "";
   }
 
+  // تحميل مبدئي: جرّب Firestore ثم FALLBACK إلى JSON
   async function loadInitial(url) {
+    // قراءة من Firestore
     if (
       window.FB &&
       typeof window.FB.loadDoc === "function" &&
@@ -105,12 +114,14 @@
         console.warn("Firestore load failed, fallback to JSON:", e);
       }
     }
+    // JSON محلي
     const res = await fetch(url + "?v=" + Date.now());
     if (!res.ok) throw new Error("تعذّر تحميل البيانات: " + url);
     const j = await res.json();
     return normalizeFromCloud(j);
   }
 
+  // حفظ فوري إلى السحابة
   async function saveCloudNow() {
     if (
       !(
@@ -136,15 +147,23 @@
 
   // ====== استيراد JSON ======
   function importAndNormalize(obj) {
+    // يسمح بوجود حقول إضافية، ويركّز على الحقول الداعمة
     const incoming = JSON.parse(JSON.stringify(obj || {}));
+
+    // ضمان المفاتيح الأساسية
     if (!incoming.sections) incoming.sections = [];
     if (!incoming.landing) incoming.landing = {};
     if (!incoming.goals) incoming.goals = [];
+
+    // تطبيع الجداول (خاصة لو جاءت كـ Maps من Firestore أو Arrays خام)
     const normalized = normalizeFromCloud(incoming);
+
+    // تعيين قيم افتراضية آمنة
     normalized.landing.logo = normalized.landing.logo ?? "";
     normalized.landing.title = normalized.landing.title ?? "";
     normalized.landing.subtitle = normalized.landing.subtitle ?? "";
     normalized.landing.body = normalized.landing.body ?? "";
+
     return normalized;
   }
 
@@ -160,6 +179,7 @@
         <div style="display:flex;gap:8px;align-items:center">
           <span id="saveStatus" class="muted" style="min-width:180px"></span>
 
+          <!-- استيراد JSON -->
           <input id="importInput" type="file" accept="application/json" style="display:none" />
           <button id="importJsonBtn" class="btn">استيراد JSON</button>
 
@@ -204,9 +224,11 @@
       data.landing?.subtitle || "";
     document.getElementById("landBody").value = data.landing?.body || "";
 
-    // ===== الأقسام =====
+    // ===== الأقسام (مع سهم دوّار وتدرجات) =====
     function rSec() {
       const host = document.getElementById("sectionsEditor");
+
+      // === حفظ حالات الفتح الحالية قبل التفريغ ===
       const prevStates = [];
       host.querySelectorAll(".editor-card").forEach((cardWrap) => {
         const det = cardWrap.querySelector("details");
@@ -224,6 +246,7 @@
         cardWrap.className = "editor-card";
 
         const det = document.createElement("details");
+        // استعادة حالة الفتح إن وُجدت، وإلا استخدم السلوك الافتراضي
         if (prevStates[si]) {
           det.open = !!prevStates[si].sectionOpen;
         } else {
@@ -231,6 +254,7 @@
         }
         det.dataset.si = si;
 
+        // summary مع سهم (span.arrow) + عنوان
         const summ = document.createElement("summary");
         summ.className = "sec-summary";
         summ.innerHTML = `<span class="summary-left">
@@ -260,10 +284,141 @@
           const subDiv = document.createElement("div");
           subDiv.className = "sub-editor";
 
-          subDiv.innerHTML = `...`; // keep original table HTML generation (omitted here for brevity)
+          // بناء HTML الجدول بالكامل كما في النسخة الأصلية
+          subDiv.innerHTML = `
+        <label>عنوان فرعي
+          <input data-si="${si}" data-sj="${sj}" class="sub-title" value="${esc(
+            sub.subtitle || ""
+          )}"/>
+        </label>
+
+        <label>النصوص (كل سطر نص)
+          <textarea rows="4" data-si="${si}" data-sj="${sj}" class="sub-texts">${esc(
+            textsStr
+          )}</textarea>
+        </label>
+
+        <details ${hasTable ? "open" : ""}>
+          <summary>جدول (اختياري)</summary>
+          <div class="table-editor" data-si="${si}" data-sj="${sj}">
+            ${
+              hasTable
+                ? `
+            <div class="tbl-row">
+              <strong>العناوين (Headers)</strong>
+              <div class="tbl-grid tbl-headers">
+                ${(sub.table.headers || [])
+                  .map(
+                    (h, ci) =>
+                      `<input class="tbl-h" data-si="${si}" data-sj="${sj}" data-ci="${ci}" value="${esc(
+                        h
+                      )}" />`
+                  )
+                  .join("")}
+              </div>
+              <div class="action-editor">
+                <button class="btn" data-act="add-col" data-si="${si}" data-sj="${sj}">+ عمود</button>
+                <button class="btn danger" data-act="del-col" data-si="${si}" data-sj="${sj}">حذف آخر عمود</button>
+              </div>
+            </div>
+
+            <div class="tbl-row">
+              <strong>أنواع الأعمدة (colFormats)</strong>
+              <div class="tbl-grid tbl-formats">
+                ${Array.from({ length: colsCount })
+                  .map((_, ci) => {
+                    const fmt =
+                      (sub.table.colFormats && sub.table.colFormats[ci]) ||
+                      (ci === 0 ? "text" : "number");
+                    return `
+                      <select class="tbl-format"
+                              data-si="${si}" data-sj="${sj}" data-ci="${ci}">
+                        <option value="text"     ${
+                          fmt === "text" ? "selected" : ""
+                        }>نص</option>
+                        <option value="number"   ${
+                          fmt === "number" ? "selected" : ""
+                        }>Number</option>
+                        <option value="currency" ${
+                          fmt === "currency" ? "selected" : ""
+                        }>Currency</option>
+                        <option value="percent"  ${
+                          fmt === "percent" ? "selected" : ""
+                        }>Percent</option>
+                      </select>
+                    `;
+                  })
+                  .join("")}
+              </div>
+            </div>
+
+            <div class="tbl-row">
+              <strong>الصفوف (Rows)</strong>
+              <div class="tbl-rows" data-si="${si}" data-sj="${sj}">
+                ${(sub.table.rows || [])
+                  .map(
+                    (row, ri) => `
+                    <div class="tbl-grid">
+                      ${Array.from({ length: colsCount })
+                        .map(
+                          (_, ci) =>
+                            `<input class="tbl-cell" data-si="${si}" data-sj="${sj}" data-ri="${ri}" data-ci="${ci}" value="${esc(
+                              row?.[ci] ?? ""
+                            )}" />`
+                        )
+                        .join("")}
+                      <button class="btn danger" data-act="del-row" data-si="${si}" data-sj="${sj}" data-ri="${ri}">حذف الصف</button>
+                    </div>
+                  `
+                  )
+                  .join("")}
+              </div>
+              <div class="action-editor">
+                <button class="btn" data-act="add-row" data-si="${si}" data-sj="${sj}">+ صف</button>
+                <button class="btn danger" data-act="del-table" data-si="${si}" data-sj="${sj}">حذف الجدول</button>
+              </div>
+            </div>
+
+            <div class="tbl-row">
+              <label class="switch">
+                <input type="checkbox" class="tbl-has-footer" data-si="${si}" data-sj="${sj}" ${
+                    sub.table.footer && sub.table.footer.length ? "checked" : ""
+                  }/>
+                <span>تفعيل صف الفوتر (Footer)</span>
+              </label>
+              <div class="tbl-grid tbl-footer" ${
+                sub.table.footer && sub.table.footer.length
+                  ? ""
+                  : 'style="display:none"'
+              }>
+                ${Array.from({ length: colsCount })
+                  .map(
+                    (_, ci) =>
+                      `<input class="tbl-f" data-si="${si}" data-sj="${sj}" data-ci="${ci}" value="${esc(
+                        sub.table.footer?.[ci] ?? ""
+                      )}" />`
+                  )
+                  .join("")}
+              </div>
+            </div>
+            `
+                : `
+            <div class="action-editor">
+              <button class="btn" data-act="add-table" data-si="${si}" data-sj="${sj}">+ إنشاء جدول</button>
+            </div>
+            `
+            }
+          </div>
+        </details>
+
+        <div class="action-editor">
+          <button class="btn danger" data-act="del-sub" data-si="${si}" data-sj="${sj}">حذف العنوان الفرعي</button>
+        </div>
+      `;
 
           subsWrap.appendChild(subDiv);
 
+          // استعادة حالة الـ details الفرعي إن كانت محفوظة
           const innerDet = subDiv.querySelector("details");
           if (innerDet) {
             if (
@@ -291,15 +446,18 @@
         host.appendChild(cardWrap);
       });
 
+      // بعد البناء: ضبط اتجاه السهام لكل details بناءً على حالتها
       host.querySelectorAll(".editor-card details").forEach((d) => {
         const arrow = d.querySelector(".arrow");
         if (arrow) arrow.style.transform = d.open ? "rotate(90deg)" : "";
       });
     }
 
-    // ===== المهمات (Goals) =====
+    // ===== المهمات (مع سهم دوّار وتدرجات) =====
     function rGoals() {
       const host = document.getElementById("goalsEditor");
+
+      // حفظ حالات الفتح الحالية
       const prevStates = [];
       host.querySelectorAll(".editor-card").forEach((cardWrap) => {
         const det = cardWrap.querySelector("details");
@@ -307,19 +465,18 @@
       });
 
       host.innerHTML = "";
-      data.goals = data.goals || [];
       (data.goals || []).forEach((g, gi) => {
         const cardWrap = document.createElement("div");
         cardWrap.className = "editor-card";
 
         const det = document.createElement("details");
-        det.dataset.gi = gi;
         if (typeof prevStates[gi] !== "undefined") {
           det.open = !!prevStates[gi];
         } else {
           if (!g.subtitle || (g.items || []).length < 2) det.open = true;
         }
 
+        // summary
         const doneCount = (g.items || []).filter((x) => x && x.done).length;
         const total = (g.items || []).length || 0;
         const pct = total ? Math.round((doneCount / total) * 100) : 0;
@@ -349,7 +506,6 @@
 
         const itemsDiv = document.createElement("div");
         itemsDiv.className = "items";
-
         (g.items || []).forEach((it, ii) => {
           const itemHtml = `
         <div class="item-editor">
@@ -367,7 +523,6 @@
       `;
           itemsDiv.insertAdjacentHTML("beforeend", itemHtml);
         });
-
         content.appendChild(itemsDiv);
 
         const actions = document.createElement("div");
@@ -383,6 +538,7 @@
         host.appendChild(cardWrap);
       });
 
+      // ضبط السهام على الحالة الحالية
       host.querySelectorAll(".editor-card details").forEach((d) => {
         const arrow = d.querySelector(".arrow");
         if (arrow) arrow.style.transform = d.open ? "rotate(90deg)" : "";
@@ -393,7 +549,9 @@
     rSec();
     rGoals();
 
-    // تدوير السهام عند toggle
+    // -------------------------
+    // مستمع toggle لتدوير السهام مباشرة عند الفتح/الغلق
+    // -------------------------
     p.addEventListener(
       "toggle",
       (ev) => {
@@ -469,50 +627,14 @@
           ci = +t.dataset.ci;
         const sub = data.sections[si].subsections[sj];
         const cols = sub.table.headers.length;
+        // جهّز المصفوفة بطول الأعمدة
         sub.table.colFormats = Array.from(
           { length: cols },
           (_, i) =>
             (sub.table.colFormats && sub.table.colFormats[i]) ||
             (i === 0 ? "text" : "number")
         );
-        sub.table.colFormats[ci] = t.value;
-      }
-
-      // === Goals: subtitle, item title, checkbox (checkbox also fires 'change' but handle here too) ===
-      if (t.classList.contains("goal-subtitle")) {
-        const gi = +t.dataset.gi;
-        data.goals = data.goals || [];
-        data.goals[gi] = data.goals[gi] || { subtitle: "", items: [] };
-        data.goals[gi].subtitle = t.value;
-        // update summaries (re-render safe)
-        rGoals();
-      }
-      if (t.classList.contains("goal-title")) {
-        const gi = +t.dataset.gi,
-          ii = +t.dataset.ii;
-        data.goals = data.goals || [];
-        data.goals[gi] = data.goals[gi] || { subtitle: "", items: [] };
-        data.goals[gi].items = data.goals[gi].items || [];
-        data.goals[gi].items[ii] = data.goals[gi].items[ii] || {
-          title: "",
-          done: false,
-        };
-        data.goals[gi].items[ii].title = t.value;
-        // no full rerender needed for title, but update counts if needed
-      }
-      if (t.classList.contains("goal-done")) {
-        const gi = +t.dataset.gi,
-          ii = +t.dataset.ii;
-        data.goals = data.goals || [];
-        data.goals[gi] = data.goals[gi] || { subtitle: "", items: [] };
-        data.goals[gi].items = data.goals[gi].items || [];
-        data.goals[gi].items[ii] = data.goals[gi].items[ii] || {
-          title: "",
-          done: false,
-        };
-        data.goals[gi].items[ii].done = !!t.checked;
-        // update summary percentages / counts
-        rGoals();
+        sub.table.colFormats[ci] = t.value; // set
       }
     });
 
@@ -609,11 +731,9 @@
         rSec();
       }
 
-      // Goals actions
+      // Goals
       if (a === "add-item") {
         const gi = +e.target.dataset.gi;
-        data.goals = data.goals || [];
-        data.goals[gi] = data.goals[gi] || { subtitle: "", items: [] };
         data.goals[gi].items = data.goals[gi].items || [];
         data.goals[gi].items.push({ title: "", done: false });
         rGoals();
@@ -621,13 +741,11 @@
       if (a === "del-item") {
         const gi = +e.target.dataset.gi,
           ii = +e.target.dataset.ii;
-        if (!data.goals || !data.goals[gi] || !data.goals[gi].items) return;
         data.goals[gi].items.splice(ii, 1);
         rGoals();
       }
       if (a === "del-group") {
         const gi = +e.target.dataset.gi;
-        if (!data.goals) return;
         data.goals.splice(gi, 1);
         rGoals();
       }
@@ -647,22 +765,6 @@
         }
         dirty = true;
         rSec();
-      }
-
-      // handle checkbox toggles also here to ensure consistency
-      if (e.target.classList.contains("goal-done")) {
-        const gi = +e.target.dataset.gi,
-          ii = +e.target.dataset.ii;
-        data.goals = data.goals || [];
-        data.goals[gi] = data.goals[gi] || { subtitle: "", items: [] };
-        data.goals[gi].items = data.goals[gi].items || [];
-        data.goals[gi].items[ii] = data.goals[gi].items[ii] || {
-          title: "",
-          done: false,
-        };
-        data.goals[gi].items[ii].done = !!e.target.checked;
-        dirty = true;
-        rGoals();
       }
     });
 
@@ -686,7 +788,7 @@
     p.querySelector("#saveCloudBtn").onclick = saveCloudNow;
     p.querySelector("#closeAdminBtn").onclick = () => p.remove();
 
-    // استيراد JSON
+    // ====== استيراد JSON (زر + إدخال ملف) ======
     const importBtn = p.querySelector("#importJsonBtn");
     const importInput = p.querySelector("#importInput");
 
@@ -712,6 +814,7 @@
 
         const imported = importAndNormalize(obj);
 
+        // تأكيد: دمج أم استبدال؟
         const doMerge = confirm(
           "هل تريد دمج المحتوى مع الحالي؟\n'OK' للدمج — 'Cancel' للاستبدال الكامل."
         );
@@ -731,12 +834,14 @@
           data = imported;
         }
 
+        // تعبئة حقول Landing
         document.getElementById("landLogo").value = data.landing?.logo || "";
         document.getElementById("landTitle").value = data.landing?.title || "";
         document.getElementById("landSubtitle").value =
           data.landing?.subtitle || "";
         document.getElementById("landBody").value = data.landing?.body || "";
 
+        // إعادة رسم
         rSec();
         rGoals();
 
@@ -750,7 +855,7 @@
       }
     };
 
-    // سحب وإفلات JSON
+    // ====== (اختياري) سحب وإفلات ملف JSON على اللوحة ======
     p.addEventListener("dragover", (e) => {
       e.preventDefault();
       p.classList.add("dragging");
@@ -765,7 +870,7 @@
         alert("أسقط ملف JSON صالحًا.");
         return;
       }
-      importInput.files = e.dataTransfer.files;
+      importInput.files = e.dataTransfer.files; // أعد استخدام نفس المعالج
       importInput.onchange({ target: importInput });
     });
 
