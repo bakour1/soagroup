@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>مخطط غرس الزيتون 20 دونم</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+  .field {
+    position: relative;
+    width: 1000px; /* عرض الأرض */
+    background-color: #e0e0e0;
+    margin: 20px auto;
+    border: 2px solid #333;
+  }
+  .tree {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    position: absolute;
+  }
+  .khalkhali { background-color: green; }
+  .qaisi { background-color: yellow; }
+</style>
+</head>
+<body>
+<h2>مخطط غرس الزيتون - 20 دونم</h2>
+<p>كل نقطة تمثل شجرة، اللون حسب الصنف</p>
+<div class="field" id="field"></div>
+
+<script>
+const field = document.getElementById('field');
+
+// إعدادات الأرض
+const totalDunum = 20; // دونم
+const dunum_m2 = 1000; // 1 دونم = 1000 م² تقريباً
+const total_area = totalDunum * dunum_m2; // 20000 م²
+const field_width_m = 100; // العرض
+const tree_spacing_x = 5; // المسافة بين الأشجار بالعرض
+const tree_spacing_y = 6; // المسافة بين الصفوف
+
+// تحويل المتر إلى بكسل (تقديري)
+const px_per_m = 10; // 1 متر = 10px
+const field_width_px = field_width_m * px_per_m;
+field.style.width = field_width_px + 'px';
+const field_height_m = total_area / field_width_m;
+const field_height_px = field_height_m * px_per_m;
+field.style.height = field_height_px + 'px';
+
+// حساب عدد الصفوف وعدد الأشجار في كل صف
+const num_rows = Math.floor(field_height_m / tree_spacing_y);
+const trees_per_row = Math.floor(field_width_m / tree_spacing_x);
+
+// توليد الأشجار
+for (let row = 0; row < num_rows; row++) {
+  for (let col = 0; col < trees_per_row; col++) {
+    const tree = document.createElement('div');
+    tree.classList.add('tree');
+    // توزيع الأصناف (مثال: صفوف بديل بين الخلخالي والقيسي)
+    if (row % 2 === 0) {
+      tree.classList.add('khalkhali');
+    } else {
+      tree.classList.add('qaisi');
+    }
+    tree.style.left = (col * tree_spacing_x * px_per_m) + 'px';
+    tree.style.top = (row * tree_spacing_y * px_per_m) + 'px';
+    field.appendChild(tree);
+  }
+}
+</script>
+</body>
+</html>
