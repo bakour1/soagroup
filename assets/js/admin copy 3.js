@@ -1,4 +1,4 @@
-// assets\js\admin everything working expect goals
+// assets/js/admin.js
 (function () {
   const admin = document.documentElement.getAttribute("data-role") === "admin";
 

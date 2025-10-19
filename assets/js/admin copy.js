@@ -1,4 +1,4 @@
-// assets/js/admin.js .... مشكلة
+// assets/js/admin.js
 (function () {
   const admin = document.documentElement.getAttribute("data-role") === "admin";
 
