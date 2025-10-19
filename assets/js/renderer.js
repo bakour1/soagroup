@@ -297,7 +297,7 @@
   }
 
   function renderGoals(root, arr) {
-    if (!Array.isArray(arr)) return;
+    if (!Array.isArray(arr) || arr.length === 0) return;
     const wrap = el("section", "goals");
     const maintitleSection = "# الأهداف: ";
     const mh = el("h2", "goals-title");

@@ -636,6 +636,42 @@
         );
         sub.table.colFormats[ci] = t.value; // set
       }
+      // === Goals: subtitle, item title, checkbox (checkbox also fires 'change' but handle here too) ===
+      if (t.classList.contains("goal-subtitle")) {
+        const gi = +t.dataset.gi;
+        data.goals = data.goals || [];
+        data.goals[gi] = data.goals[gi] || { subtitle: "", items: [] };
+        data.goals[gi].subtitle = t.value;
+        // update summaries (re-render safe)
+        rGoals();
+      }
+      if (t.classList.contains("goal-title")) {
+        const gi = +t.dataset.gi,
+          ii = +t.dataset.ii;
+        data.goals = data.goals || [];
+        data.goals[gi] = data.goals[gi] || { subtitle: "", items: [] };
+        data.goals[gi].items = data.goals[gi].items || [];
+        data.goals[gi].items[ii] = data.goals[gi].items[ii] || {
+          title: "",
+          done: false,
+        };
+        data.goals[gi].items[ii].title = t.value;
+        // no full rerender needed for title, but update counts if needed
+      }
+      if (t.classList.contains("goal-done")) {
+        const gi = +t.dataset.gi,
+          ii = +t.dataset.ii;
+        data.goals = data.goals || [];
+        data.goals[gi] = data.goals[gi] || { subtitle: "", items: [] };
+        data.goals[gi].items = data.goals[gi].items || [];
+        data.goals[gi].items[ii] = data.goals[gi].items[ii] || {
+          title: "",
+          done: false,
+        };
+        data.goals[gi].items[ii].done = !!t.checked;
+        // update summary percentages / counts
+        rGoals();
+      }
     });
 
     // ===== الأزرار =====
