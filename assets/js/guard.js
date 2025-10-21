@@ -17,18 +17,20 @@
   const path = window.location.pathname || "";
   const isLogin = /(^|\/)login\.html?$/.test(path);
 
+  // تنظيف أي جلسات قديمة كانت محفوظة في localStorage (النظام القديم)
+  try { ["soa_session_v1"].forEach((k) => localStorage.removeItem(k)); } catch (e) {}
+
   const read = window.SOA_AUTH && window.SOA_AUTH.readSession;
   const session = read ? read() : null;
 
+  // إن لم توجد جلسة (أو أُبطلت بسبب تغيّر كلمة السر) و لسنا في صفحة الدخول -> اذهب لصفحة الدخول
   if (!session && !isLogin) {
-    window.location.replace(base + "login.html"); // 👈 الآن يوجّه إلى /soagroup/login.html
+    window.location.replace(base + "login.html");
     return;
   }
 
+  // لو توجد جلسة، حدّد دور المستخدم على عنصر <html>
   if (session) {
-    document.documentElement.setAttribute(
-      "data-role",
-      session.role || "member"
-    );
+    document.documentElement.setAttribute("data-role", session.role || "member");
   }
 })();
