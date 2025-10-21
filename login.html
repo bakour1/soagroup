@@ -5,6 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>تسجيل الدخول — SOA Group</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -15,77 +16,101 @@
     <link rel="stylesheet" href="assets/css/layout.css" />
     <link rel="stylesheet" href="assets/css/components.css" />
     <link rel="stylesheet" href="assets/css/utilities.css" />
+
     <style>
-      body,
-      html {
-        height: 100%;
-      }
+      html, body { height: 100%; }
+      .login-wrap { min-height: 100%; display: grid; place-items: center; padding: 24px; }
+      .login-card { max-width: 480px; width: 100%; }
+      .full-brand img { max-width: 220px; height: auto; }
     </style>
   </head>
   <body>
     <div class="login-wrap">
       <article class="card login-card">
-        <div
-          class="full-brand"
-          style="
-            text-align: center;
-            margin: 12px auto;
-            height: auto;
-            width: 80%;
-          "
-        >
+        <div class="full-brand" style="text-align:center; margin:12px auto;">
           <img src="./imgs/logo-3.png" alt="SOA Group" />
         </div>
+
         <h1 class="card-title">تسجيل الدخول</h1>
         <p class="muted">
           قم بتسجيل الدخول للوصول إلى لوحة التحكم الخاصة بموقع مجموعة سوا.
         </p>
-        <form id="loginForm" class="stack">
-          <label
-            >اسم المستخدم<input
+
+        <!-- ملاحظة: نوقف الإكمال التلقائي قدر الإمكان -->
+        <form id="loginForm" class="stack" autocomplete="off" novalidate>
+          <!-- حقول مخفية لتثبيط حفظ كلمات السر في بعض المتصفحات -->
+          <input type="text" style="display:none" aria-hidden="true" />
+          <input type="password" style="display:none" aria-hidden="true" />
+
+          <label>
+            اسم المستخدم
+            <input
               id="username"
+              name="username"
               required
-              placeholder="اسم المستخدم" /></label
-          ><label
-            >كلمة السر<input
+              autocomplete="username"
+              autocapitalize="off"
+              autocorrect="off"
+              placeholder="مثال: bakour512"
+            />
+          </label>
+
+          <label>
+            كلمة السر
+            <input
               id="password"
+              name="password"
               required
               type="password"
-              placeholder="********" /></label
-          ><button class="btn" type="submit">دخول</button>
+              autocomplete="new-password"
+              placeholder="********"
+            />
+          </label>
+
+          <button class="btn" type="submit">دخول</button>
         </form>
+
         <p class="muted">
           إذا واجهت أي مشكلة في تسجيل الدخول، يرجى التواصل مع مسؤول النظام.
         </p>
       </article>
     </div>
-    <!-- login.html (المقاطع المهمة فقط) -->
+
+    <!-- الترتيب مهم: config ثم auth -->
     <script src="assets/js/config.js"></script>
     <script src="assets/js/auth.js"></script>
 
-    <!-- <form id="loginForm" class="stack">
-      <label
-        >اسم المستخدم
-        <input id="username" required placeholder="مثال: bakour512" />
-      </label>
-      <label
-        >كلمة السر
-        <input id="password" required type="password" placeholder="********" />
-      </label>
-      <button class="btn" type="submit">دخول</button>
-    </form> -->
-
     <script>
-      document
-        .getElementById("loginForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const u = document.getElementById("username").value.trim();
-          const p = document.getElementById("password").value;
-          const r = await window.SOA_AUTH.login(u, p); // 👈 يوزرنيم أو إيميل
-          if (!r.ok) return alert(r.error || "فشل تسجيل الدخول");
-          location.href = "index.html";
-        });
+      // نفس دالة حساب المسار الأساسي المستخدمة بباقي الملفات
+      function getBase() {
+        const cfgBase = (window.SOA_CONFIG && window.SOA_CONFIG.BASE_PATH) || null;
+        if (cfgBase) return cfgBase.endsWith("/") ? cfgBase : cfgBase + "/";
+
+        const { protocol, hostname, pathname } = window.location;
+        if (protocol === "file:") return "";
+        if (/\.github\.io$/.test(hostname)) {
+          const seg = pathname.split("/").filter(Boolean)[0];
+          return seg ? `/${seg}/` : "/";
+        }
+        return "/";
+      }
+
+      // حرص إضافي: نظّف أي جلسة قديمة عند فتح صفحة الدخول
+      try { window.SOA_AUTH && window.SOA_AUTH.clearSession(); } catch(e) {}
+
+      document.getElementById("loginForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const u = document.getElementById("username").value.trim();
+        const p = document.getElementById("password").value;
+
+        const r = await window.SOA_AUTH.login(u, p);
+        if (!r.ok) {
+          alert(r.error || "فشل تسجيل الدخول");
+          return;
+        }
+        // توجيه آمن بحسب BASE_PATH
+        location.href = getBase() + "index.html";
+      });
     </script>
   </body>
 </html>
