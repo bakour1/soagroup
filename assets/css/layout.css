@@ -59,7 +59,7 @@
     transition: background 0.3s;
     &:hover,
     &.active {
-      background: var(--brand-2);
+      background: var(--brand-2) !important;
     }
   }
 }
@@ -275,7 +275,11 @@ th {
   transition: background 0.3s;
 }
 .drawer-links li a.active {
-  background: #ffffff52;
+  background-color: var(--brand);
+}
+.active {
+  background-color: var(--brand-2) !important;
+  color: #fff !important;
 }
 .drawer-links li.sep {
   height: 1px;

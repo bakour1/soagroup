@@ -29,6 +29,9 @@
       // SOA Phone
       soa_phone_model: "data/projects/soa_phone/model.json",
       soa_phone_feasibility: "data/projects/soa_phone/feasibility.json",
+
+      // projects gallery
+      gallery: "/data/projects/gallery/projects.json",
     },
 
     // توحيد بناء الرابط من أي عمق + إزالة التكرارات //
