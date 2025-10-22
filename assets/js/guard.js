@@ -18,7 +18,9 @@
   const isLogin = /(^|\/)login\.html?$/.test(path);
 
   // تنظيف أي جلسات قديمة كانت محفوظة في localStorage (النظام القديم)
-  try { ["soa_session_v1"].forEach((k) => localStorage.removeItem(k)); } catch (e) {}
+  try {
+    ["soa_session_v1"].forEach((k) => localStorage.removeItem(k));
+  } catch (e) {}
 
   const read = window.SOA_AUTH && window.SOA_AUTH.readSession;
   const session = read ? read() : null;
@@ -31,6 +33,30 @@
 
   // لو توجد جلسة، حدّد دور المستخدم على عنصر <html>
   if (session) {
-    document.documentElement.setAttribute("data-role", session.role || "member");
+    document.documentElement.setAttribute(
+      "data-role",
+      session.role || "member"
+    );
+  }
+
+  // ===== حماية صفحات خاصة بالإدمن فقط =====
+  const adminOnlyPatterns = [
+    /strategy\.html$/i,
+    /goals\.html$/i,
+    /projects\/gallery/i,
+    /projects\/new\/model\.html$/i,
+    /projects\/new\/feasibility\.html$/i,
+    /projects\/soa_phone\/model\.html$/i,
+    /projects\/soa_phone\/feasibility\.html$/i,
+  ];
+
+  // التحقق إن كانت الصفحة الحالية من الصفحات المحمية
+  const isAdminOnly = adminOnlyPatterns.some((re) => re.test(path));
+
+  // لو الصفحة تتطلب صلاحية أدمن والمستخدم ليس أدمن -> تحويل إلى الصفحة الرئيسية أو رسالة منع
+  if (isAdminOnly && session.role !== "admin") {
+    alert("🚫 لا تملك صلاحية الوصول إلى هذه الصفحة.");
+    window.location.replace(base + "index.html");
+    return;
   }
 })();

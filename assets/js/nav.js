@@ -161,3 +161,9 @@
     document.body.classList.remove("no-scroll");
   });
 })();
+(function hideAdminLinks() {
+  const role = document.documentElement.getAttribute("data-role");
+  if (role !== "admin") {
+    document.querySelectorAll("[data-admin-only]").forEach((el) => el.remove());
+  }
+})();
