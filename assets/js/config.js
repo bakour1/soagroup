@@ -15,7 +15,8 @@
 
     // GitHub Pages تحت /soagroup/ — محليًا خليه للجذر /
     // BASE_PATH: isLocalHost ? "/" : "/",
-    BASE_PATH: isLocalHost ? "/" : "/soagroup/",
+    // BASE_PATH: isLocalHost ? "/" : "/soagroup/",
+    BASE_PATH: "/soagroup/",
 
     PAGES: {
       home: "data/home.json",
