@@ -14,7 +14,8 @@
     LOGO_URL: "imgs/logo-4.png",
 
     // GitHub Pages تحت /soagroup/ — محليًا خليه للجذر /
-    BASE_PATH: isLocalHost ? "/" : "/",
+    // BASE_PATH: isLocalHost ? "/" : "/",
+    BASE_PATH: isLocalHost ? "/" : "/soagroup/",
 
     PAGES: {
       home: "data/home.json",
